@@ -26,13 +26,18 @@ export default defineConfig({
     // Per-assertion timeout
     expect: { timeout: 10 * 1000 },
 
-    // Run tests within a file in sequence (safer for stateful UI applications)
+    // Run tests within a file in sequence.
+    // Enterprise suites share environments and test data — parallel execution requires
+    // isolated storageState per worker (available in the Auth Module, Milestone 2).
+    // Upgrade path: set fullyParallel: true and add storageState to each project.
     fullyParallel: false,
 
     // Fail the build if test.only is accidentally committed
     forbidOnly: isCI,
 
-    // Retry on CI only — fail fast locally for quick feedback
+    // Retry once on CI — intentional divergence from the Playwright default (retries: 0).
+    // A single retry distinguishes genuine flakiness from transient infrastructure noise
+    // without masking real bugs. See ADR-012 (retries policy).
     retries: isCI ? 1 : 0,
 
     // Single worker in CI (avoids shared-session conflicts); auto-detect locally
@@ -55,17 +60,24 @@ export default defineConfig({
         // Defaults to https://playwright.dev so the sample test runs without configuration.
         baseURL: process.env.URL ?? "https://playwright.dev",
 
-        // Always capture screenshots — attached to test report on failure
-        screenshot: "on",
+        // Capture screenshot only when a test fails — reduces CI artifact storage
+        screenshot: "only-on-failure",
 
-        // Always record video — attached to test report on failure
-        video: "on",
+        // Record video only for failing tests — reduces CI artifact storage
+        video: "retain-on-failure",
 
         // Capture Playwright trace on first retry — enables step-by-step replay
         trace: "on-first-retry",
+
+        // Attribute used by getByTestId() — align with your application's data attribute.
+        // Change to "data-cy" (Cypress) or "data-qa" to match an existing convention.
+        testIdAttribute: "data-testid",
     },
 
     projects: [
+        // ── Primary browser ────────────────────────────────────────────────────
+        // Chromium is the default — enterprise internal apps typically support a
+        // single browser. See ADR-010 for the cross-browser policy decision.
         {
             name: "chromium",
             use: {
@@ -73,5 +85,24 @@ export default defineConfig({
                 viewport: { width: 1280, height: 720 },
             },
         },
+
+        // ── Optional: cross-browser coverage ───────────────────────────────────
+        // Uncomment the projects below and run: npx playwright install
+        // Consider running cross-browser only on the release branch in CI.
+        //
+        // {
+        //     name: "firefox",
+        //     use: {
+        //         ...devices["Desktop Firefox"],
+        //         viewport: { width: 1280, height: 720 },
+        //     },
+        // },
+        // {
+        //     name: "webkit",
+        //     use: {
+        //         ...devices["Desktop Safari"],
+        //         viewport: { width: 1280, height: 720 },
+        //     },
+        // },
     ],
 });

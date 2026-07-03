@@ -139,8 +139,20 @@ export abstract class BasePage {
     // ── Visibility check ──────────────────────────────────────────────────────
 
     /**
-     * Return true if the locator is currently visible, false otherwise.
-     * Does not throw — use for conditional logic inside Page Objects.
+     * Return true if the locator is currently visible **at the instant of the call**,
+     * false otherwise. Does NOT retry or wait.
+     *
+     * ⚠️  NEVER use this method as an assertion or as a proxy for `expect().toBeVisible()`.
+     *     It bypasses Playwright's auto-wait engine and will produce intermittent results
+     *     on any element whose visibility state transitions asynchronously (loaders,
+     *     modals, animated panels, lazy-rendered content).
+     *
+     * ✅  CORRECT — conditional branching when you already know the element is stable:
+     *         if (await this.isVisible(this.banner)) { await this.dismissBanner(); }
+     *
+     * ❌  INCORRECT — do not use as an assertion:
+     *         expect(await this.isVisible(this.submitBtn)).toBe(true);  // flake-prone
+     *         Use instead: await this.expectVisible(this.submitBtn);    // auto-waits
      */
     async isVisible(locator: Locator): Promise<boolean> {
         return locator.isVisible();
