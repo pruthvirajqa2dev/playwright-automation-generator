@@ -3,12 +3,15 @@ import path from "path";
 import fs from "fs-extra";
 import { Scaffolder } from "../../scaffold/Scaffolder";
 import { buildScaffoldContext } from "../../scaffold/ScaffoldContext";
+import { artifactRegistry } from "../../scaffold/ArtifactRegistry";
+import type { ArtifactDefinition } from "../../scaffold/ArtifactDefinition";
 
 /**
  * Registers the "add" command group: pw-gen add page | test | component
  *
- * These commands scaffold individual artefacts into an existing generated
- * framework. They reuse the TemplateRenderer and FileWriter from the engine.
+ * Commands are resolved from the ArtifactRegistry — no artefact knowledge is
+ * hardcoded here. Adding a new artefact requires only a new ArtifactDefinition
+ * registered in ArtifactRegistry; this file requires no modification.
  *
  * Usage:
  *   pw-gen add page <Name>       [--output <dir>] [--force]
@@ -32,178 +35,74 @@ export function registerAddCommand(program: Command): void {
       "Scaffold a new artefact into an existing generated framework",
     );
 
-  // ── pw-gen add page <Name> ────────────────────────────────────────────────
-  add
-    .command("page <name>")
-    .description(
-      "Scaffold a new Page Object extending BasePage\n" +
-        "  Example: pw-gen add page Supplier",
-    )
-    .option(
-      "--output <dir>",
-      "Framework root directory (default: current directory)",
-    )
-    .option("--force", "Overwrite an existing file without confirmation", false)
-    .action(
-      async (rawName: string, options: { output?: string; force: boolean }) => {
-        try {
-          const frameworkDir = resolveFrameworkDir(options.output);
-          assertFrameworkExists(frameworkDir);
+  for (const definition of artifactRegistry.all()) {
+    add
+      .command(`${definition.command} <name>`)
+      .description(
+        `${definition.description}\n` +
+          `  Example: pw-gen add ${definition.command} ${definition.example}`,
+      )
+      .option(
+        "--output <dir>",
+        "Framework root directory (default: current directory)",
+      )
+      .option(
+        "--force",
+        "Overwrite an existing file without confirmation",
+        false,
+      )
+      .action(createAction(definition));
+  }
+}
 
-          const context = buildScaffoldContext(rawName);
-          const separator = "─".repeat(55);
+/**
+ * Produces an async action handler for a given artefact definition.
+ * The banner, success message, and next-steps text are all derived from the
+ * definition — no artefact-specific logic lives in this function.
+ */
+function createAction(definition: ArtifactDefinition) {
+  return async (
+    rawName: string,
+    options: { output?: string; force: boolean },
+  ): Promise<void> => {
+    try {
+      const frameworkDir = resolveFrameworkDir(options.output);
+      assertFrameworkExists(frameworkDir);
 
-          console.log(`
+      const context = buildScaffoldContext(rawName);
+      const separator = "─".repeat(55);
+
+      console.log(`
 ${separator}
-  pw-gen  —  Scaffolding Page Object
+  pw-gen  —  Scaffolding ${definition.label}
 ${separator}
-  Name     : ${context.name}Page
+  Name     : ${definition.displayName(context)}
   Output   : ${frameworkDir}
 ${separator}`);
 
-          const scaffolder = new Scaffolder();
-          const outputPath = await scaffolder.scaffoldPage(
-            rawName,
-            frameworkDir,
-            options.force,
-          );
+      const scaffolder = new Scaffolder();
+      const outputPath = await scaffolder.scaffold(
+        definition,
+        rawName,
+        frameworkDir,
+        options.force,
+      );
 
-          console.log(`
-  Page Object generated successfully!
+      console.log(`
+  ${definition.successTitle}
 
   File     : ${outputPath}
 
   Next steps:
-    1.  Update locators in ${outputPath}
-    2.  Implement business methods
-    3.  Import in a test:
-          import { ${context.name}Page } from '../pages/${context.name}Page';
+${definition.nextSteps(context, outputPath)}
 ${separator}
 `);
-        } catch (err: unknown) {
-          const message = err instanceof Error ? err.message : String(err);
-          console.error(`\n  Error: ${message}`);
-          process.exit(1);
-        }
-      },
-    );
-
-  // ── pw-gen add test <Name> ────────────────────────────────────────────────
-  add
-    .command("test <name>")
-    .description(
-      "Scaffold a new Playwright test file\n" +
-        "  Example: pw-gen add test SupplierSearch",
-    )
-    .option(
-      "--output <dir>",
-      "Framework root directory (default: current directory)",
-    )
-    .option("--force", "Overwrite an existing file without confirmation", false)
-    .action(
-      async (rawName: string, options: { output?: string; force: boolean }) => {
-        try {
-          const frameworkDir = resolveFrameworkDir(options.output);
-          assertFrameworkExists(frameworkDir);
-
-          const context = buildScaffoldContext(rawName);
-          const separator = "─".repeat(55);
-
-          console.log(`
-${separator}
-  pw-gen  —  Scaffolding Test File
-${separator}
-  Name     : ${context.slug}.spec.ts
-  Output   : ${frameworkDir}
-${separator}`);
-
-          const scaffolder = new Scaffolder();
-          const outputPath = await scaffolder.scaffoldTest(
-            rawName,
-            frameworkDir,
-            options.force,
-          );
-
-          console.log(`
-  Test file generated successfully!
-
-  File     : ${outputPath}
-
-  Next steps:
-    1.  Add your Page Object import (see TODO comments)
-    2.  Implement test steps
-    3.  Run the test:
-          npx playwright test ${outputPath}
-${separator}
-`);
-        } catch (err: unknown) {
-          const message = err instanceof Error ? err.message : String(err);
-          console.error(`\n  Error: ${message}`);
-          process.exit(1);
-        }
-      },
-    );
-
-  // ── pw-gen add component <Name> ───────────────────────────────────────────
-  add
-    .command("component <name>")
-    .description(
-      "Scaffold a new Component Object extending BaseComponent\n" +
-        "  Example: pw-gen add component SearchPanel",
-    )
-    .option(
-      "--output <dir>",
-      "Framework root directory (default: current directory)",
-    )
-    .option("--force", "Overwrite an existing file without confirmation", false)
-    .action(
-      async (rawName: string, options: { output?: string; force: boolean }) => {
-        try {
-          const frameworkDir = resolveFrameworkDir(options.output);
-          assertFrameworkExists(frameworkDir);
-
-          const context = buildScaffoldContext(rawName);
-          const separator = "─".repeat(55);
-
-          console.log(`
-${separator}
-  pw-gen  —  Scaffolding Component Object
-${separator}
-  Name     : ${context.name}Component
-  Output   : ${frameworkDir}
-${separator}`);
-
-          const scaffolder = new Scaffolder();
-          const outputPath = await scaffolder.scaffoldComponent(
-            rawName,
-            frameworkDir,
-            options.force,
-          );
-
-          console.log(`
-  Component generated successfully!
-
-  File     : ${outputPath}
-
-  Next steps:
-    1.  Update locators in ${outputPath}
-    2.  Implement business methods
-    3.  Compose into a Page Object:
-          import { ${context.name}Component } from '../components/${context.name}Component';
-          // inside Page Object class:
-          readonly ${context.camelName} = new ${context.name}Component(
-            this.page.locator('[data-testid="${context.slug}"]'),
-            this.testInfo,
-          );
-${separator}
-`);
-        } catch (err: unknown) {
-          const message = err instanceof Error ? err.message : String(err);
-          console.error(`\n  Error: ${message}`);
-          process.exit(1);
-        }
-      },
-    );
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      console.error(`\n  Error: ${message}`);
+      process.exit(1);
+    }
+  };
 }
 
 /**

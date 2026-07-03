@@ -3,21 +3,22 @@ import path from "path";
 import { TemplateRenderer } from "../engine/TemplateRenderer";
 import { FileWriter } from "../engine/FileWriter";
 import { buildScaffoldContext, ScaffoldContext } from "./ScaffoldContext";
+import type { ArtifactDefinition } from "./ArtifactDefinition";
 
 /**
- * Scaffolder — orchestrates individual artifact generation into an existing
+ * Scaffolder — orchestrates individual artefact generation into an existing
  * generated framework.
  *
  * Reuses the existing engine components:
  *   • TemplateRenderer.renderSingle() — EJS rendering with ScaffoldContext
  *   • FileWriter.write()             — atomic file write to the output directory
  *
+ * Artefact-specific knowledge (template file, output path, naming rules) is no
+ * longer hardcoded here. It is supplied at call time via an `ArtifactDefinition`
+ * resolved from the `ArtifactRegistry`.
+ *
  * Overwrite protection: if the target file already exists and force is false,
  * the Scaffolder throws before any write occurs.
- *
- * Scaffold templates live in src/modules/scaffold/templates/:
- *   page.ts.ejs       → src/pages/{Name}Page.ts
- *   test.spec.ts.ejs  → src/tests/{slug}.spec.ts
  */
 export class Scaffolder {
   private readonly renderer = new TemplateRenderer();
@@ -33,77 +34,28 @@ export class Scaffolder {
   );
 
   /**
-   * Scaffold a new Page Object extending BasePage.
+   * Scaffold a single artefact described by its registry definition.
    *
-   * @param rawName      - Artifact name: "Supplier", "SupplierSearch"
+   * The definition supplies the template file, output path derivation, and all
+   * naming rules — making this method fully generic across artefact types.
+   *
+   * @param definition   - The artefact definition resolved from `ArtifactRegistry`.
+   * @param rawName      - Name as provided by the user; normalised internally to PascalCase.
    * @param frameworkDir - Absolute path to the existing generated framework root.
    * @param force        - When true, overwrite an existing file without prompting.
    * @returns            - The relative output path of the generated file.
    */
-  async scaffoldPage(
+  async scaffold(
+    definition: ArtifactDefinition,
     rawName: string,
     frameworkDir: string,
     force = false,
   ): Promise<string> {
     const context = buildScaffoldContext(rawName);
-    const outputPath = `src/pages/${context.name}Page.ts`;
+    const outputPath = definition.outputPath(context);
 
     await this.writeArtifact(
-      "page.ts.ejs",
-      outputPath,
-      context,
-      frameworkDir,
-      force,
-    );
-
-    return outputPath;
-  }
-
-  /**
-   * Scaffold a new Component Object extending BaseComponent.
-   *
-   * @param rawName      - Artifact name: "SearchPanel", "InvoiceTable"
-   * @param frameworkDir - Absolute path to the existing generated framework root.
-   * @param force        - When true, overwrite an existing file without prompting.
-   * @returns            - The relative output path of the generated file.
-   */
-  async scaffoldComponent(
-    rawName: string,
-    frameworkDir: string,
-    force = false,
-  ): Promise<string> {
-    const context = buildScaffoldContext(rawName);
-    const outputPath = `src/components/${context.name}Component.ts`;
-
-    await this.writeArtifact(
-      "component.ts.ejs",
-      outputPath,
-      context,
-      frameworkDir,
-      force,
-    );
-
-    return outputPath;
-  }
-
-  /**
-   * Scaffold a new Playwright test file.
-   *
-   * @param rawName      - Artifact name: "SupplierSearch"
-   * @param frameworkDir - Absolute path to the existing generated framework root.
-   * @param force        - When true, overwrite an existing file without prompting.
-   * @returns            - The relative output path of the generated file.
-   */
-  async scaffoldTest(
-    rawName: string,
-    frameworkDir: string,
-    force = false,
-  ): Promise<string> {
-    const context = buildScaffoldContext(rawName);
-    const outputPath = `src/tests/${context.slug}.spec.ts`;
-
-    await this.writeArtifact(
-      "test.spec.ts.ejs",
+      definition.templateFile,
       outputPath,
       context,
       frameworkDir,
