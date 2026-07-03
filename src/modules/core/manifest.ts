@@ -44,6 +44,10 @@ export const manifest: ModuleManifest = {
       outputPath: "src/logging/logger.ts",
     },
     {
+      templatePath: "src/components/BaseComponent.ts.ejs",
+      outputPath: "src/components/BaseComponent.ts",
+    },
+    {
       templatePath: "src/pages/BasePage.ts.ejs",
       outputPath: "src/pages/BasePage.ts",
     },

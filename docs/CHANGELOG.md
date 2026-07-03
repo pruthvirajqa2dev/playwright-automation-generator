@@ -7,7 +7,50 @@ For implementation decisions, see [DECISIONS.md](DECISIONS.md) and the [ADR inde
 
 ---
 
-## [Unreleased] — Scaffolding Engine Phase 1
+## [Unreleased]
+
+### Sprint 2A — Component Object Model Foundation
+
+Introduces `BaseComponent`, the abstract base class for reusable UI Component Objects
+in generated frameworks. Targets v0.3.
+
+**`BaseComponent` — abstract, Locator-scoped component base**
+
+Every generated framework now includes `src/components/BaseComponent.ts`. The class
+provides the infrastructure for building reusable UI widget abstractions — tables, modal
+dialogs, search panels, pagination controls — that can be composed into Page Objects.
+
+Key design properties:
+
+- **Locator-scoped constructor:** `constructor(root: Locator, testInfo: TestInfo)` — the
+  component is bounded to a specific DOM region, not the full page. The root `Locator`
+  is supplied by the Page Object that instantiates the component.
+
+- **`find(selector)` helper:** scopes child locators to the component's root:
+  `private readonly rows = this.find('tbody tr')`. Promotes Playwright's composable locator
+  pattern without requiring direct access to `root.locator()` in every subclass.
+
+- **`isVisible()` anti-pattern warning carried forward:** consistent with `BasePage.isVisible()`;
+  returns instantly without retry. The same JSDoc prohibition against assertion use applies.
+
+- **Component-scoped screenshot:** `takeScreenshot(name)` captures only the component's
+  bounding box via `root.screenshot()`, producing focused evidence artefacts.
+
+- **Matched helper surface:** `waitForElement`, `waitForLoadingIndicator`, `expectVisible`,
+  `expectHidden`, `expectText`, `click`, `fill`, `selectOption`, `scrollIntoView` mirror
+  BasePage conventions. Page-level concerns (navigation, URL assertions, network idle) are
+  intentionally absent.
+
+**No concrete components generated**
+
+`TableComponent`, `ModalComponent`, `PaginationComponent`, and other pattern-specific
+classes are application-specific. They are never generated. See ADR-012.
+
+**`pw-gen add component` not implemented in this sprint**
+
+The scaffolding command for generating component subclasses is planned for a future sprint.
+
+### Scaffolding Engine Phase 1
 
 Changes introduced by the Scaffolding Engine sprint. Targets v0.5.
 

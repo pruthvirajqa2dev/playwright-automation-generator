@@ -20,6 +20,7 @@
 - [Template Engine](#template-engine)
 - [Template Context](#template-context)
 - [Generated Framework Anatomy](#generated-framework-anatomy)
+- [Component Object Model](#component-object-model)
 - [Design Principles](#design-principles)
 
 ---
@@ -467,6 +468,8 @@ playwright-{slug}/
 ├── .env.example           Credential template — copy to src/config/.env
 ├── README.md              Full self-documenting enterprise README
 └── src/
+    ├── components/
+    │   └── BaseComponent.ts   Abstract base class for reusable UI Components
     ├── config/
     │   └── env.ts         Typed, readonly ENV wrapper (ENV.URL, ENV.USERID, …)
     ├── fixtures/
@@ -480,6 +483,96 @@ playwright-{slug}/
         └── smoke/
             └── login.smoke.spec.ts   Login smoke test template
 ```
+
+---
+
+## Component Object Model
+
+The Component Object Model (COM) provides an abstraction for reusable UI widgets that
+appear inside Page Objects — tables, modal dialogs, search panels, pagination controls,
+date pickers, and other recurring UI patterns.
+
+### Hierarchy
+
+```
+                    BasePage
+                 (Page-scoped)
+                    abstract
+                       │
+          ┌────────────┴─────────────┐
+          │                         │
+   LoginPage                  DashboardPage   …
+   (concrete)                 (concrete)
+
+
+                  BaseComponent
+               (Locator-scoped)
+                   abstract
+                      │
+          ┌───────────┴──────────────┐
+   InvoiceTableComponent      ConfirmModalComponent   …
+      (concrete)                 (concrete)
+
+
+   Page Object  ──composes──►  Component(s)
+   DashboardPage contains:
+     readonly table   = new InvoiceTableComponent(…)
+     readonly modal   = new ConfirmModalComponent(…)
+```
+
+### Scope distinction
+
+|                        | BasePage                                  | BaseComponent                  |
+| ---------------------- | ----------------------------------------- | ------------------------------ |
+| Constructor parameter  | `page: Page`                              | `root: Locator`                |
+| Scope                  | Full screen                               | Bounded DOM region             |
+| Navigation             | ✅ `navigateTo()`, `waitForNetworkIdle()` | ✗ Not applicable               |
+| URL / title assertions | ✅ `expectURL()`, `expectTitle()`         | ✗ Not applicable               |
+| Element interactions   | ✅ scoped via `page.locator()`            | ✅ scoped via `root.locator()` |
+| Screenshot             | Full page                                 | Component bounding box only    |
+
+### Composition pattern
+
+```typescript
+// Page Object that composes components
+class InvoicePage extends BasePage {
+  // Declare components as readonly fields, scoped to their DOM containers
+  readonly table = new InvoiceTableComponent(
+    this.page.locator('[data-testid="invoice-table"]'),
+    this.testInfo,
+  );
+
+  readonly modal = new ConfirmModalComponent(
+    this.page.locator('[role="dialog"]'),
+    this.testInfo,
+  );
+}
+
+// Component subclass
+class InvoiceTableComponent extends BaseComponent {
+  private readonly rows = this.find("tbody tr");
+  private readonly emptyState = this.find('[data-testid="no-results"]');
+
+  async expectRowCount(n: number): Promise<void> {
+    await expect(this.rows).toHaveCount(n);
+  }
+
+  async expectEmptyState(): Promise<void> {
+    await this.expectVisible(this.emptyState, "empty state message");
+  }
+}
+```
+
+### Generator responsibility
+
+The generator produces `BaseComponent.ts` only — the abstract infrastructure.
+Concrete component subclasses (`InvoiceTableComponent`, `ConfirmModalComponent`, etc.)
+are application-specific and are never generated.
+
+The future `pw-gen add component <Name>` command (planned for a later sprint) will
+scaffold correctly-structured subclasses with TODO stubs for the team to implement.
+
+See [ADR-012](adr/ADR-012-component-object-model.md) for the full decision rationale.
 
 ---
 

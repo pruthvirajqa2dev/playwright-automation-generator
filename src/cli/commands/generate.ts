@@ -110,7 +110,7 @@ export function registerGenerateCommand(program: Command): void {
         const separator = "─".repeat(55);
         console.log(`
 ${separator}
-  pw-gen  v0.1.0  —  Playwright Automation Platform Generator
+  pw-gen  v0.2.0  —  Playwright Automation Platform Generator
 ${separator}
   Project      : ${config.project.name}
   Organisation : ${config.project.organisation}
