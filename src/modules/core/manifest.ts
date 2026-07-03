@@ -7,7 +7,7 @@ import type { ModuleManifest } from "../types";
  * The core module is always included in every generated framework.
  * It produces the complete structural scaffold: configuration files,
  * the abstract BasePage, an extended test fixture, a Winston logger,
- * a sample Page Object, and one immediately runnable sample test.
+ * a LoginPage template, and one immediately runnable login smoke test.
  *
  * Every other module builds on top of what core generates.
  */
@@ -47,12 +47,12 @@ export const manifest: ModuleManifest = {
       outputPath: "src/pages/BasePage.ts",
     },
     {
-      templatePath: "src/pages/SamplePage.ts.ejs",
-      outputPath: "src/pages/SamplePage.ts",
+      templatePath: "src/pages/LoginPage.ts.ejs",
+      outputPath: "src/pages/LoginPage.ts",
     },
     {
-      templatePath: "src/tests/sample/sample.spec.ts.ejs",
-      outputPath: "src/tests/sample/sample.spec.ts",
+      templatePath: "src/tests/smoke/login.smoke.spec.ts.ejs",
+      outputPath: "src/tests/smoke/login.smoke.spec.ts",
     },
   ],
 
