@@ -1,11 +1,11 @@
 # ADR-007 — `storageState` Authentication Pattern Deferred to Auth Module
 
-| Field | Value |
-|---|---|
-| **Status** | Accepted |
-| **Date** | 2026-07-03 |
-| **Deciders** | Core team |
-| **Gap reference** | G1 |
+| Field             | Value      |
+| ----------------- | ---------- |
+| **Status**        | Accepted   |
+| **Date**          | 2026-07-03 |
+| **Deciders**      | Core team  |
+| **Gap reference** | G1         |
 
 ---
 
@@ -16,8 +16,8 @@ state to `playwright/.auth/*.json`, reuse across tests — will **not** be
 implemented in the `core` module template. It will be delivered as a complete,
 opinionated implementation in the `auth` module (Milestone 2).
 
-The `core` module's `LoginPage` template is retained as a Page Object *pattern
-demonstration*, not a production authentication implementation.
+The `core` module's `LoginPage` template is retained as a Page Object _pattern
+demonstration_, not a production authentication implementation.
 
 ---
 
@@ -50,6 +50,7 @@ create `playwright/.auth/`, add it to `.gitignore`.
 **Why rejected:**
 
 The skeleton would be non-functional until the team:
+
 1. Implements `LoginPage.expectLoginSuccess()` for their application
 2. Configures `URL`, `USERID`, and `PASSWORD` in `.env`
 3. Understands the setup/dependency project model
@@ -74,6 +75,7 @@ a partial, undocumented skeleton — the worst of both options.
 ### Option C — Deliver `storageState` in Auth Module (selected)
 
 The auth module will deliver:
+
 - `tests/auth.setup.ts` — a functional setup project
 - Updated `playwright.config.ts` with setup project dependencies
 - `playwright/.auth/` directory creation and `.gitignore` entry
@@ -110,11 +112,13 @@ This is the complete pattern, not a skeleton.
 ## Consequences
 
 **Positive:**
+
 - Core module is clean and immediately runnable without any configuration
 - Auth module delivers the complete pattern correctly, not a partial skeleton
 - Teams understand the separation: core = structure, auth = session management
 
 **Negative:**
+
 - Teams building authenticated test suites before Milestone 2 must implement
   `storageState` manually
 - The `loginPage` fixture in `fixtures/test.ts` is under-utilised until the
@@ -127,6 +131,7 @@ This is the complete pattern, not a skeleton.
 ## Future Considerations
 
 The auth module (Milestone 2) will:
+
 - Replace `loginPage` fixture with an authenticated `page` fixture that
   uses `storageState` automatically
 - Support multiple authentication roles via separate storage state files

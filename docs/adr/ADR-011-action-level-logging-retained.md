@@ -1,11 +1,11 @@
 # ADR-011 — Action-Level Logging Retained in `BasePage`
 
-| Field | Value |
-|---|---|
-| **Status** | Accepted |
-| **Date** | 2026-07-03 |
-| **Deciders** | Core team |
-| **Gap reference** | G11 |
+| Field             | Value      |
+| ----------------- | ---------- |
+| **Status**        | Accepted   |
+| **Date**          | 2026-07-03 |
+| **Deciders**      | Core team  |
+| **Gap reference** | G11        |
 
 ---
 
@@ -21,6 +21,7 @@ overlap is accepted as a deliberate redundancy for enterprise CI pipelines.
 ## Context
 
 Playwright's Trace Viewer captures a complete record of every test action:
+
 - Every `click`, `fill`, `goto`, `waitFor` call
 - DOM snapshots before and after each action
 - Network requests and responses
@@ -55,9 +56,9 @@ test-level business events in `test.step()` callbacks:
 
 ```typescript
 await test.step("Submit invoice", async () => {
-    await invoicePage.fillInvoiceNumber("INV-001");
-    await invoicePage.submit();
-    logger.info("Invoice INV-001 submitted"); // ← business event, not action
+  await invoicePage.fillInvoiceNumber("INV-001");
+  await invoicePage.submit();
+  logger.info("Invoice INV-001 submitted"); // ← business event, not action
 });
 ```
 
@@ -135,15 +136,16 @@ logging in tests.
 
 The logging strategy in the generated framework is:
 
-| Layer | What to log | Tool |
-|---|---|---|
-| `BasePage` | Every UI action (click, fill, navigate) | Winston (`logger.info`) |
-| `test.step()` | Business workflow steps | Winston (`logger.info`) |
-| `test.step()` | Test outcomes (pass/fail) | Winston via `_testLifecycle` fixture |
-| All interactions | Timing, DOM snapshots, network | Playwright Trace Viewer |
-| All interactions | Screenshots on failure | Playwright `screenshot: "only-on-failure"` |
+| Layer            | What to log                             | Tool                                       |
+| ---------------- | --------------------------------------- | ------------------------------------------ |
+| `BasePage`       | Every UI action (click, fill, navigate) | Winston (`logger.info`)                    |
+| `test.step()`    | Business workflow steps                 | Winston (`logger.info`)                    |
+| `test.step()`    | Test outcomes (pass/fail)               | Winston via `_testLifecycle` fixture       |
+| All interactions | Timing, DOM snapshots, network          | Playwright Trace Viewer                    |
+| All interactions | Screenshots on failure                  | Playwright `screenshot: "only-on-failure"` |
 
 This creates a layered evidence model:
+
 - **Immediate** (CI stdout): Winston business and action logs
 - **Near-term** (CI artifact): Playwright HTML report with screenshots
 - **Deep debugging** (CI artifact): Playwright trace file with full replay
@@ -153,12 +155,14 @@ This creates a layered evidence model:
 ## Consequences
 
 **Positive:**
+
 - Complete action log immediately visible in CI pipeline stdout
 - Logs parseable by external log aggregation tools
 - Consistent logging across all generated frameworks
 - No additional tooling required to understand what a test did
 
 **Negative:**
+
 - Winston log output overlaps with Trace Viewer — same actions recorded twice
 - Verbose log output for complex tests (each `fill`, `click`, `scroll` is logged)
 - Page Objects import and depend on the logger module

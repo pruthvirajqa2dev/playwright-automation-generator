@@ -1,11 +1,11 @@
 # ADR-009 — `TestInfo` Retained in `BasePage` Constructor
 
-| Field | Value |
-|---|---|
-| **Status** | Accepted |
-| **Date** | 2026-07-03 |
-| **Deciders** | Core team |
-| **Gap reference** | G5 |
+| Field             | Value      |
+| ----------------- | ---------- |
+| **Status**        | Accepted   |
+| **Date**          | 2026-07-03 |
+| **Deciders**      | Core team  |
+| **Gap reference** | G5         |
 
 ---
 
@@ -23,10 +23,10 @@ The official Playwright POM documentation shows:
 
 ```typescript
 class PlaywrightDevPage {
-    readonly page: Page;
-    constructor(page: Page) {
-        this.page = page;
-    }
+  readonly page: Page;
+  constructor(page: Page) {
+    this.page = page;
+  }
 }
 ```
 
@@ -34,19 +34,22 @@ The generated `BasePage` uses:
 
 ```typescript
 abstract class BasePage {
-    protected readonly page: Page;
-    protected readonly testInfo: TestInfo;
+  protected readonly page: Page;
+  protected readonly testInfo: TestInfo;
 
-    constructor(page: Page, testInfo: TestInfo) {
-        this.page = page;
-        this.testInfo = testInfo;
-    }
+  constructor(page: Page, testInfo: TestInfo) {
+    this.page = page;
+    this.testInfo = testInfo;
+  }
 
-    async takeScreenshot(name: string): Promise<void> {
-        const filePath = this.testInfo.outputPath(`${name}.png`);
-        await this.page.screenshot({ path: filePath, fullPage: false });
-        await this.testInfo.attach(name, { path: filePath, contentType: "image/png" });
-    }
+  async takeScreenshot(name: string): Promise<void> {
+    const filePath = this.testInfo.outputPath(`${name}.png`);
+    await this.page.screenshot({ path: filePath, fullPage: false });
+    await this.testInfo.attach(name, {
+      path: filePath,
+      contentType: "image/png",
+    });
+  }
 }
 ```
 
@@ -63,6 +66,7 @@ Removes `TestInfo` from the constructor. Page Objects have no access to test
 lifecycle information.
 
 **Consequences:**
+
 - `takeScreenshot()` cannot be a `BasePage` method — it must move to the fixture
   or be called directly in tests
 - Tests become more verbose: instead of `await loginPage.takeScreenshot("step-1")`
@@ -158,12 +162,14 @@ screenshot attachment, and clear testability.
 ## Consequences
 
 **Positive:**
+
 - `takeScreenshot()` is available in every Page Object without additional imports
 - Test evidence can be captured at any point in a workflow
 - Dependencies are explicit and visible in the constructor signature
 - Page Objects can be tested in isolation with a mocked `TestInfo`
 
 **Negative:**
+
 - Constructor is more complex than the minimal `constructor(page: Page)` pattern
 - Every test that creates a Page Object must have `testInfo` in scope (available
   as the second argument to the test function, or via `test.info()`)

@@ -11,20 +11,20 @@
 
 ## Summary Table
 
-| ID | Gap | Decision | Phase | ADR |
-|---|---|---|---|---|
-| [G1](#g1--authentication-storagstate-absent) | No `storageState` authentication pattern | **Defer** — Auth Module | Milestone 2 | [ADR-007](adr/ADR-007-authentication-storagstate-deferred.md) |
-| [G2](#g2--video-and-screenshot-settings) | `video: "on"` + `screenshot: "on"` | **Adopt** Playwright recommendation | Phase 2a | — |
-| [G3](#g3--isvisible-anti-pattern-warning) | `isVisible()` missing assertion warning | **Adopt** — strengthen JSDoc warning | Phase 2a | — |
-| [G4](#g4--fullyparallel-false-default) | `fullyParallel: false` default | **Intentional divergence** | Phase 2a | [ADR-008](adr/ADR-008-fullyparallel-false-enterprise-default.md) |
-| [G5](#g5--testinfo-in-basepage-constructor) | `TestInfo` in `BasePage` constructor | **Intentional divergence** | — | [ADR-009](adr/ADR-009-testinfo-in-basepage-constructor.md) |
-| [G6](#g6--no-eslint) | No ESLint / floating-promises rule | **Adopt** | Phase 2a | — |
-| [G7](#g7--chromium-only) | Chromium only in config | **Intentional divergence** | Phase 2a | [ADR-010](adr/ADR-010-single-browser-default.md) |
-| [G8](#g8--no-testidattribute) | No `testIdAttribute` configured | **Adopt** | Phase 2a | — |
-| [G9](#g9--no-soft-assertions) | No soft assertions demonstrated | **Adopt** | Phase 2a | — |
-| [G10](#g10--mergetests-not-used) | `base.extend()` instead of `mergeTests()` | **Defer** — premature | Milestone 2 | — |
-| [G11](#g11--action-level-logging-in-basepage) | Logger logs every action (overlaps Trace Viewer) | **Intentional divergence** | — | [ADR-011](adr/ADR-011-action-level-logging-retained.md) |
-| [G12](#g12--retries-1-vs-2-on-ci) | `retries: 1` on CI vs. Playwright default `2` | **Intentional divergence** | Phase 2a | — |
+| ID                                            | Gap                                              | Decision                             | Phase       | ADR                                                              |
+| --------------------------------------------- | ------------------------------------------------ | ------------------------------------ | ----------- | ---------------------------------------------------------------- |
+| [G1](#g1--authentication-storagstate-absent)  | No `storageState` authentication pattern         | **Defer** — Auth Module              | Milestone 2 | [ADR-007](adr/ADR-007-authentication-storagstate-deferred.md)    |
+| [G2](#g2--video-and-screenshot-settings)      | `video: "on"` + `screenshot: "on"`               | **Adopt** Playwright recommendation  | Phase 2a    | —                                                                |
+| [G3](#g3--isvisible-anti-pattern-warning)     | `isVisible()` missing assertion warning          | **Adopt** — strengthen JSDoc warning | Phase 2a    | —                                                                |
+| [G4](#g4--fullyparallel-false-default)        | `fullyParallel: false` default                   | **Intentional divergence**           | Phase 2a    | [ADR-008](adr/ADR-008-fullyparallel-false-enterprise-default.md) |
+| [G5](#g5--testinfo-in-basepage-constructor)   | `TestInfo` in `BasePage` constructor             | **Intentional divergence**           | —           | [ADR-009](adr/ADR-009-testinfo-in-basepage-constructor.md)       |
+| [G6](#g6--no-eslint)                          | No ESLint / floating-promises rule               | **Adopt**                            | Phase 2a    | —                                                                |
+| [G7](#g7--chromium-only)                      | Chromium only in config                          | **Intentional divergence**           | Phase 2a    | [ADR-010](adr/ADR-010-single-browser-default.md)                 |
+| [G8](#g8--no-testidattribute)                 | No `testIdAttribute` configured                  | **Adopt**                            | Phase 2a    | —                                                                |
+| [G9](#g9--no-soft-assertions)                 | No soft assertions demonstrated                  | **Adopt**                            | Phase 2a    | —                                                                |
+| [G10](#g10--mergetests-not-used)              | `base.extend()` instead of `mergeTests()`        | **Defer** — premature                | Milestone 2 | —                                                                |
+| [G11](#g11--action-level-logging-in-basepage) | Logger logs every action (overlaps Trace Viewer) | **Intentional divergence**           | —           | [ADR-011](adr/ADR-011-action-level-logging-retained.md)          |
+| [G12](#g12--retries-1-vs-2-on-ci)             | `retries: 1` on CI vs. Playwright default `2`    | **Intentional divergence**           | Phase 2a    | —                                                                |
 
 ---
 
@@ -43,6 +43,7 @@ and reuse it across all tests via `storageState`.
 
 `storageState` is the correct long-term pattern. However, implementing it correctly
 requires:
+
 - `tests/auth.setup.ts` — a dedicated setup test file
 - A `setup` project in `playwright.config.ts` with `dependencies: ['setup']` on
   test projects
@@ -76,6 +77,7 @@ already correct) provides a superior debugging experience for failures, making
 always-on video redundant.
 
 **Phase 2a changes:**
+
 - `screenshot: "on"` → `screenshot: "only-on-failure"`
 - `video: "on"` → `video: "retain-on-failure"`
 
@@ -150,6 +152,7 @@ the most insidious sources of false-positive test results in Playwright. The rul
 catches this at author time with no runtime cost.
 
 **Phase 2a changes:**
+
 - Add `eslint.config.mjs` to the core module templates
 - Add `eslint`, `@typescript-eslint/eslint-plugin`, `@typescript-eslint/parser`
   to generated `package.json` devDependencies
@@ -219,7 +222,7 @@ directly.
 
 **Decision: DEFER — not yet relevant**
 
-`mergeTests()` is appropriate when combining fixture sets from *separate* modules.
+`mergeTests()` is appropriate when combining fixture sets from _separate_ modules.
 With only the core module, `base.extend()` is the correct API. Introducing
 `mergeTests()` prematurely adds complexity without benefit. When the Auth Module
 contributes its own fixture set, the fixture composition pattern will be redesigned
@@ -275,13 +278,13 @@ fewer safety nets.
 
 Changes approved for implementation in the next milestone, in execution order:
 
-| Order | Change | Targets |
-|---|---|---|
-| 1 | `screenshot` + `video` settings (G2) | `playwright.config.ts.ejs` |
-| 2 | `retries` comment (G12) | `playwright.config.ts.ejs` |
-| 3 | `testIdAttribute` (G8) | `playwright.config.ts.ejs` |
-| 4 | Firefox + WebKit commented projects (G7) | `playwright.config.ts.ejs` |
-| 5 | `fullyParallel` comment update (G4) | `playwright.config.ts.ejs` |
-| 6 | `isVisible()` warning (G3) | `BasePage.ts.ejs` |
-| 7 | ESLint config + deps (G6) | new `eslint.config.mjs.ejs`, `package.json.ejs`, `manifest.ts` |
-| 8 | Soft assertions (G9) | `README.md.ejs` |
+| Order | Change                                   | Targets                                                        |
+| ----- | ---------------------------------------- | -------------------------------------------------------------- |
+| 1     | `screenshot` + `video` settings (G2)     | `playwright.config.ts.ejs`                                     |
+| 2     | `retries` comment (G12)                  | `playwright.config.ts.ejs`                                     |
+| 3     | `testIdAttribute` (G8)                   | `playwright.config.ts.ejs`                                     |
+| 4     | Firefox + WebKit commented projects (G7) | `playwright.config.ts.ejs`                                     |
+| 5     | `fullyParallel` comment update (G4)      | `playwright.config.ts.ejs`                                     |
+| 6     | `isVisible()` warning (G3)               | `BasePage.ts.ejs`                                              |
+| 7     | ESLint config + deps (G6)                | new `eslint.config.mjs.ejs`, `package.json.ejs`, `manifest.ts` |
+| 8     | Soft assertions (G9)                     | `README.md.ejs`                                                |

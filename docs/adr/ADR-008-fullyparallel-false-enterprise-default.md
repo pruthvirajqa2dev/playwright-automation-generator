@@ -1,11 +1,11 @@
 # ADR-008 — `fullyParallel: false` as the Enterprise Default
 
-| Field | Value |
-|---|---|
-| **Status** | Accepted |
-| **Date** | 2026-07-03 |
-| **Deciders** | Core team |
-| **Gap reference** | G4 |
+| Field             | Value      |
+| ----------------- | ---------- |
+| **Status**        | Accepted   |
+| **Date**          | 2026-07-03 |
+| **Deciders**      | Core team  |
+| **Gap reference** | G4         |
 
 ---
 
@@ -28,8 +28,8 @@ Playwright's official basic configuration template uses `fullyParallel: true` as
 the default — appropriate for a framework whose primary audience includes
 isolated unit-style frontend tests running against a local dev server.
 
-The generated framework targets enterprise UI automation against *deployed
-environments* (UAT, staging, production) with the following characteristics:
+The generated framework targets enterprise UI automation against _deployed
+environments_ (UAT, staging, production) with the following characteristics:
 
 - **Shared test data.** The same test database is used by all concurrent workers.
   Test A creates a record that Test B queries; without ordering guarantees, Test B
@@ -82,6 +82,7 @@ entirely.
 ### Option C — `fullyParallel: false` with upgrade guidance (selected)
 
 Default `false`, with a detailed comment explaining:
+
 1. Why the default is conservative
 2. The conditions required for safe parallel execution
 3. The specific setting to change and what to change it to
@@ -118,11 +119,13 @@ description of what the setting does.
 ## Consequences
 
 **Positive:**
+
 - Generated framework is safe to run immediately against shared environments
 - No test failures due to shared state on first use
 - Comment provides a clear upgrade path when isolation is established
 
 **Negative:**
+
 - Diverges from Playwright's official default
 - Single-worker sequential execution is slower than necessary for teams with
   properly isolated tests
@@ -134,9 +137,9 @@ description of what the setting does.
 
 The generated `playwright.config.ts` comment should be updated to read:
 
-> *"Sequential execution — safe for shared environments without test data isolation.*
-> *To enable parallel execution: add the auth module (`pw-gen add auth`), configure*
-> *`storageState` for each worker, isolate test data per worker, then set this to `true`."*
+> _"Sequential execution — safe for shared environments without test data isolation._
+> _To enable parallel execution: add the auth module (`pw-gen add auth`), configure_
+> _`storageState` for each worker, isolate test data per worker, then set this to `true`."_
 
 When the auth module is installed, the module's configuration step should offer
 to set `fullyParallel: true` automatically if the team confirms they have isolated

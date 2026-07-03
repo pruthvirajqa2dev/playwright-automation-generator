@@ -1,11 +1,11 @@
 # ADR-010 — Chromium as Primary Browser, Multi-Browser as Opt-In
 
-| Field | Value |
-|---|---|
-| **Status** | Accepted |
-| **Date** | 2026-07-03 |
-| **Deciders** | Core team |
-| **Gap reference** | G7 |
+| Field             | Value      |
+| ----------------- | ---------- |
+| **Status**        | Accepted   |
+| **Date**          | 2026-07-03 |
+| **Deciders**      | Core team  |
+| **Gap reference** | G7         |
 
 ---
 
@@ -23,9 +23,9 @@ across all browsers."
 
 Playwright's best practices guide states:
 
-> *"Playwright makes it easy to test your site across all browsers no matter what
+> _"Playwright makes it easy to test your site across all browsers no matter what
 > platform you are on. Testing across all browsers ensures your app works for all
-> users."*
+> users."_
 
 The guide provides a config example with all three browser engines active:
 Chromium, Firefox, and WebKit.
@@ -111,12 +111,14 @@ ready-to-uncomment project configurations — a one-line change to add them.
 ## Consequences
 
 **Positive:**
+
 - `npm test` completes in a predictable time without multi-browser overhead
 - No false failures from browser-specific rendering differences
 - Generated framework matches most enterprise browser policies
 - Firefox and WebKit are one uncomment away when needed
 
 **Negative:**
+
 - Diverges from Playwright best practices recommendation
 - Teams building customer-facing portals must actively enable the other browsers
 - Cross-browser testing is not enforced — teams may forget to enable it
