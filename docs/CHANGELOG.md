@@ -7,9 +7,78 @@ For implementation decisions, see [DECISIONS.md](DECISIONS.md) and the [ADR inde
 
 ---
 
-## [Unreleased]
+## [Unreleased] — Scaffolding Engine Phase 1
 
-Changes planned but not yet released. See [ROADMAP.md](ROADMAP.md) for v0.2 scope.
+Changes introduced by the Scaffolding Engine sprint. Targets v0.5.
+
+### Generator
+
+**`pw-gen add page <Name>` command**
+
+Scaffolds a production-ready Page Object extending `BasePage` into an existing
+generated framework. The generated class includes:
+
+- Constructor with `Page` and `TestInfo` injection (BasePage convention)
+- Placeholder locators as private readonly fields with adaptation instructions
+- `open()` navigation method with a TODO path placeholder
+- `expectOnPage()` assertion method
+- Commented business method examples: `search()`, `submit()`, `expectResultCount()`
+- Full JSDoc explaining Page Object conventions
+
+Output: `src/pages/{Name}Page.ts`
+
+**`pw-gen add test <Name>` command**
+
+Scaffolds a Playwright test file demonstrating all enterprise framework conventions.
+The generated file includes:
+
+- Imports from `fixtures/test` (project-specific fixture set) and `logging/logger`
+- Commented Page Object import with a `pw-gen add page` reminder
+- `test.describe()` wrapper
+- `test()` with `test.info().annotations` for HTML report labelling
+- Three `test.step()` blocks: Navigate, Verify, Business Logic
+- Logger calls at each step boundary
+- Placeholder assertions with `expect()`
+- TODO markers and inline guidance at every adaptation point
+
+Output: `src/tests/{slug}.spec.ts`
+
+**Overwrite protection**
+
+Both scaffold commands check for an existing file before writing. A clear error
+message is shown if the target already exists, with a `--force` flag to override.
+
+**`--output` flag**
+
+Both commands accept `--output <dir>` to specify the framework root directory.
+Defaults to the current working directory. Validates that the target directory
+contains a `playwright.config.ts` before proceeding.
+
+### Architecture
+
+**`src/scaffold/` module**
+
+- `ScaffoldContext.ts` — lightweight context interface and `buildScaffoldContext()` builder
+- `Scaffolder.ts` — orchestrator for single-artefact scaffold operations; reuses `TemplateRenderer.renderSingle()` and `FileWriter.write()`
+
+**`TemplateRenderer.renderSingle()`**
+
+New method on the existing `TemplateRenderer` that renders a single EJS template
+with an arbitrary context object. Used by the Scaffolding Engine without requiring
+a full `ModuleManifest` or `TemplateContext`.
+
+**`src/modules/scaffold/templates/`**
+
+New template directory for scaffold artefacts, parallel to the existing module
+template directories. Templates follow identical EJS conventions.
+
+**`src/utils/string.ts` additions**
+
+Three new string utilities required for name derivation:
+
+- `toKebabCase()` — PascalCase/camelCase → kebab-case (e.g. `SupplierSearch` → `supplier-search`)
+- `toCamelCase()` — PascalCase → camelCase (e.g. `Supplier` → `supplier`)
+- `toPascalCase()` — normalises first character to uppercase
 
 ---
 

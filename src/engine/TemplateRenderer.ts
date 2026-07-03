@@ -52,4 +52,30 @@ export class TemplateRenderer {
 
     return staged;
   }
+
+  /**
+   * Renders a single EJS template with the given context object.
+   * Used by the Scaffolding Engine to render individual artifact templates
+   * without requiring a full ModuleManifest or TemplateContext.
+   *
+   * @param templatePath - Absolute path to the EJS template file.
+   * @param outputPath   - Relative output path in the generated framework.
+   * @param context      - Context object passed to EJS (may contain any shape).
+   */
+  renderSingle(
+    templatePath: string,
+    outputPath: string,
+    context: Record<string, unknown>,
+  ): StagedFile {
+    if (!fs.existsSync(templatePath)) {
+      throw new Error(`Scaffold template not found: ${templatePath}`);
+    }
+
+    const templateSource = fs.readFileSync(templatePath, "utf-8");
+    const content = ejs.render(templateSource, context, {
+      filename: templatePath,
+    });
+
+    return { outputPath, content };
+  }
 }

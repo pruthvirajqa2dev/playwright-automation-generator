@@ -95,14 +95,23 @@ See [ADR-007](adr/ADR-007-authentication-storagstate-deferred.md) for the deferr
 
 ## ⬜ v0.5 — Scaffolding Commands
 
-_Planned_
+_In Progress (Phase 1 delivered: 2026-07-03)_
 
 > Add `pw-gen add` commands to scaffold individual artifacts into existing generated projects.
 
-**Planned:**
+**Delivered (Phase 1):**
 
-- `pw-gen add page <name>` — scaffold a new Page Object extending `BasePage`
-- `pw-gen add test <name>` — scaffold a new test file with standard imports and structure
+- ✅ `pw-gen add page <name>` — scaffold a new Page Object extending `BasePage`
+- ✅ `pw-gen add test <name>` — scaffold a new test file with standard imports and structure
+- ✅ Overwrite protection — existing files are never silently overwritten; `--force` opt-in
+- ✅ `--output` flag — specify framework root; defaults to current directory with validation
+- ✅ `ScaffoldContext` — lightweight context for scaffold templates (name, slug, camelName)
+- ✅ `Scaffolder` service — reuses `TemplateRenderer` and `FileWriter` from the generation engine
+- ✅ `TemplateRenderer.renderSingle()` — single-file render method for scaffold operations
+- ✅ `src/modules/scaffold/templates/` — scaffold EJS templates following module template conventions
+
+**Planned (Phase 2):**
+
 - `pw-gen add fixture <name>` — scaffold a new typed fixture with `AppFixtures` extension
 - `pw-gen add module <module-name>` — add an optional module to an existing generated project
 

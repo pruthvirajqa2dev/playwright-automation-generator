@@ -15,6 +15,7 @@
 - [High-Level Architecture](#high-level-architecture)
 - [Major Components](#major-components)
 - [Generation Pipeline](#generation-pipeline)
+- [Scaffolding Engine](#scaffolding-engine)
 - [Module System](#module-system)
 - [Template Engine](#template-engine)
 - [Template Context](#template-context)
@@ -80,7 +81,8 @@ playwright-automation-generator/     ← the generator (this repo)
 │   ├── cli/                         ← Commander.js CLI entry-point
 │   │   ├── index.ts                 Commander program root
 │   │   └── commands/
-│   │       └── generate.ts          "pw-gen new" command — validates + calls Assembler
+│   │       ├── generate.ts          "pw-gen new" command — validates + calls Assembler
+│   │       └── add.ts               "pw-gen add" command group — calls Scaffolder
 │   │
 │   ├── config/
 │   │   └── schema.ts                Zod schema — validates user input at the CLI boundary
@@ -88,28 +90,37 @@ playwright-automation-generator/     ← the generator (this repo)
 │   ├── engine/                      ← core generation pipeline (stateless)
 │   │   ├── Assembler.ts             Orchestrates the full pipeline (1 public method)
 │   │   ├── ContextBuilder.ts        Config → TemplateContext transformation
-│   │   ├── TemplateRenderer.ts      EJS rendering → StagedFile[]
+│   │   ├── TemplateRenderer.ts      EJS rendering → StagedFile[] + renderSingle()
 │   │   └── FileWriter.ts            StagedFile[] → filesystem writes
+│   │
+│   ├── scaffold/                    ← scaffolding engine (reuses engine components)
+│   │   ├── ScaffoldContext.ts       ScaffoldContext interface + buildScaffoldContext()
+│   │   └── Scaffolder.ts           Orchestrates single-artefact scaffold operations
 │   │
 │   ├── modules/                     ← composable module definitions
 │   │   ├── types.ts                 ModuleManifest and ModuleFileDefinition interfaces
 │   │   ├── registry.ts              ModuleRegistry — module resolution and ordering
-│   │   └── core/                    ← the "core" module (always included)
-│   │       ├── manifest.ts          Declares template→output file mappings
-│   │       └── templates/           EJS templates for the generated framework
-│   │           ├── playwright.config.ts.ejs
-│   │           ├── package.json.ejs
-│   │           ├── README.md.ejs
-│   │           └── src/
-│   │               ├── config/env.ts.ejs
-│   │               ├── fixtures/test.ts.ejs
-│   │               ├── logging/logger.ts.ejs
-│   │               ├── pages/BasePage.ts.ejs
-│   │               ├── pages/LoginPage.ts.ejs
-│   │               └── tests/smoke/login.smoke.spec.ts.ejs
+│   │   ├── core/                    ← the "core" module (always included)
+│   │   │   ├── manifest.ts          Declares template→output file mappings
+│   │   │   └── templates/           EJS templates for the generated framework
+│   │   │       ├── playwright.config.ts.ejs
+│   │   │       ├── package.json.ejs
+│   │   │       ├── README.md.ejs
+│   │   │       └── src/
+│   │   │           ├── config/env.ts.ejs
+│   │   │           ├── fixtures/test.ts.ejs
+│   │   │           ├── logging/logger.ts.ejs
+│   │   │           ├── pages/BasePage.ts.ejs
+│   │   │           ├── pages/LoginPage.ts.ejs
+│   │   │           └── tests/smoke/login.smoke.spec.ts.ejs
+│   │   │
+│   │   └── scaffold/                ← scaffold artefact templates
+│   │       └── templates/
+│   │           ├── page.ts.ejs      Page Object scaffold template
+│   │           └── test.spec.ts.ejs Test file scaffold template
 │   │
 │   └── utils/
-│       └── string.ts                toSlug() — kebab-case conversion
+│       └── string.ts                toSlug(), toKebabCase(), toCamelCase(), toPascalCase()
 │
 └── Generated/                       ← sample generated output (gitignored)
     └── playwright-fms/              ← example: FMS framework
@@ -244,6 +255,112 @@ Generated/playwright-fms/
   ├── README.md
   └── src/ …
 ```
+
+---
+
+## Scaffolding Engine
+
+The Scaffolding Engine allows engineers to add individual artefacts to an
+**existing** generated framework. It is the second mode of pw-gen — complementing
+full-framework generation with incremental productivity commands.
+
+### Commands
+
+```
+pw-gen add page <Name>   — Scaffold a Page Object extending BasePage
+pw-gen add test <Name>   — Scaffold a Playwright test file
+```
+
+### Scaffolding Pipeline
+
+```
+pw-gen add page Supplier --output ./playwright-fms
+      │
+      │  1. Validate framework exists (playwright.config.ts present)
+      │  2. Normalise name input to PascalCase
+      ▼
+buildScaffoldContext("Supplier")
+  → { name: "Supplier", slug: "supplier", camelName: "supplier", generator: {…} }
+      │
+      │  3. Render scaffold template
+      ▼
+TemplateRenderer.renderSingle(templatePath, outputPath, context)
+  → StagedFile  { outputPath: "src/pages/SupplierPage.ts", content: "…" }
+      │
+      │  4. Overwrite check (throws if file exists and --force not set)
+      │  5. Write to framework root
+      ▼
+FileWriter.write(frameworkDir, [stagedFile])
+  → playwright-fms/src/pages/SupplierPage.ts
+```
+
+### Reused Infrastructure
+
+The Scaffolding Engine is built on top of the existing generation engine — no
+logic is duplicated:
+
+| Component                                          | Reuse                                             |
+| -------------------------------------------------- | ------------------------------------------------- |
+| `TemplateRenderer.renderSingle()`                  | EJS rendering for single-file scaffold operations |
+| `FileWriter.write()`                               | Atomic file write with directory creation         |
+| `toKebabCase()`, `toCamelCase()`, `toPascalCase()` | Name derivation in `ScaffoldContext`              |
+
+The only new components are `ScaffoldContext` (lighter context shape for artefact
+templates) and `Scaffolder` (the orchestrator that sequences the scaffold pipeline).
+
+### ScaffoldContext
+
+Scaffold templates receive a `ScaffoldContext` — a much lighter object than the
+full `TemplateContext` used by generation runs:
+
+```typescript
+{
+  name: string; // PascalCase: "Supplier", "SupplierSearch"
+  slug: string; // kebab-case: "supplier", "supplier-search"
+  camelName: string; // camelCase: "supplier", "supplierSearch"
+  generator: {
+    version: string;
+    generatedAt: string;
+  }
+}
+```
+
+All name derivations live in `buildScaffoldContext()`. Scaffold templates are
+thin substitution views — they contain no logic.
+
+### Overwrite Protection
+
+The Scaffolder checks for an existing file before any write occurs. If the target
+file already exists and `--force` is not specified, the operation throws with a
+clear message:
+
+```
+Error: File already exists: src/pages/SupplierPage.ts
+  Use --force to overwrite the existing file.
+```
+
+### Scaffold Templates
+
+Scaffold templates live in `src/modules/scaffold/templates/` and follow the same
+EJS conventions as full-generation templates:
+
+| Template           | Output path                | Command                  |
+| ------------------ | -------------------------- | ------------------------ |
+| `page.ts.ejs`      | `src/pages/{Name}Page.ts`  | `pw-gen add page <Name>` |
+| `test.spec.ts.ejs` | `src/tests/{slug}.spec.ts` | `pw-gen add test <Name>` |
+
+### Future Extension Points
+
+The scaffold foundation is intentionally minimal. Each future `pw-gen add` command
+adds one template file and one method to `Scaffolder`:
+
+| Future command                    | Template               | Notes                                                  |
+| --------------------------------- | ---------------------- | ------------------------------------------------------ |
+| `pw-gen add fixture <Name>`       | `fixture.ts.ejs`       | Typed AppFixtures extension                            |
+| `pw-gen add api <Name>`           | `api-client.ts.ejs`    | Requires api module                                    |
+| `pw-gen add module <name>`        | n/a                    | Installs an optional module into an existing framework |
+| `pw-gen add business-flow <Name>` | `business-flow.ts.ejs` | Multi-page workflow class                              |
+| `pw-gen add utility <Name>`       | `utility.ts.ejs`       | Typed utility helper                                   |
 
 ---
 
