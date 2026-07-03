@@ -9,6 +9,49 @@ For implementation decisions, see [DECISIONS.md](DECISIONS.md) and the [ADR inde
 
 ## [Unreleased]
 
+### Sprint 2B — Component Scaffolding
+
+Extends the Scaffolding Engine with `pw-gen add component <Name>` — the command that
+generates a concrete `Component Object` extending `BaseComponent` into an existing
+framework's `src/components/` directory.
+
+**`pw-gen add component <Name>`**
+
+Scaffolds `src/components/{Name}Component.ts` into an existing generated framework.
+
+```
+pw-gen add component SearchPanel
+pw-gen add component SearchPanel --output ./Generated/playwright-fms
+pw-gen add component SearchPanel --force
+```
+
+The generated file:
+
+- Extends `BaseComponent` — compiles immediately without modification
+- Declares a typed `constructor(root: Locator, testInfo: TestInfo)`
+- Includes placeholder `private readonly` locators via `this.find()`
+- Includes placeholder business methods with `TODO` markers
+- Contains a JSDoc composition example showing how to embed the component into a
+  Page Object
+- Follows all project naming conventions (`{Name}Component.ts`, PascalCase)
+
+**Architecture**
+
+No new engine components were introduced. The command reuses:
+
+- `ScaffoldContext` / `buildScaffoldContext()` — name normalisation
+- `TemplateRenderer.renderSingle()` — EJS rendering
+- `FileWriter.write()` — atomic write with directory creation
+- Overwrite protection (`--force` to bypass)
+
+A single new template `src/modules/scaffold/templates/component.ts.ejs` and a single
+new method `Scaffolder.scaffoldComponent()` complete the implementation.
+
+**Consistent CLI pattern**
+
+`add component` mirrors the `add page` and `add test` UX exactly — same options,
+same banner output, same error handling, same `--force` semantics.
+
 ### Sprint 2A — Component Object Model Foundation
 
 Introduces `BaseComponent`, the abstract base class for reusable UI Component Objects
@@ -45,10 +88,6 @@ Key design properties:
 
 `TableComponent`, `ModalComponent`, `PaginationComponent`, and other pattern-specific
 classes are application-specific. They are never generated. See ADR-012.
-
-**`pw-gen add component` not implemented in this sprint**
-
-The scaffolding command for generating component subclasses is planned for a future sprint.
 
 ### Scaffolding Engine Phase 1
 

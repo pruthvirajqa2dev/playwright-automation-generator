@@ -60,6 +60,33 @@ export class Scaffolder {
   }
 
   /**
+   * Scaffold a new Component Object extending BaseComponent.
+   *
+   * @param rawName      - Artifact name: "SearchPanel", "InvoiceTable"
+   * @param frameworkDir - Absolute path to the existing generated framework root.
+   * @param force        - When true, overwrite an existing file without prompting.
+   * @returns            - The relative output path of the generated file.
+   */
+  async scaffoldComponent(
+    rawName: string,
+    frameworkDir: string,
+    force = false,
+  ): Promise<string> {
+    const context = buildScaffoldContext(rawName);
+    const outputPath = `src/components/${context.name}Component.ts`;
+
+    await this.writeArtifact(
+      "component.ts.ejs",
+      outputPath,
+      context,
+      frameworkDir,
+      force,
+    );
+
+    return outputPath;
+  }
+
+  /**
    * Scaffold a new Playwright test file.
    *
    * @param rawName      - Artifact name: "SupplierSearch"

@@ -117,8 +117,9 @@ playwright-automation-generator/     ← the generator (this repo)
 │   │   │
 │   │   └── scaffold/                ← scaffold artefact templates
 │   │       └── templates/
-│   │           ├── page.ts.ejs      Page Object scaffold template
-│   │           └── test.spec.ts.ejs Test file scaffold template
+│   │           ├── page.ts.ejs         Page Object scaffold template
+│   │           ├── test.spec.ts.ejs    Test file scaffold template
+│   │           └── component.ts.ejs    Component Object scaffold template
 │   │
 │   └── utils/
 │       └── string.ts                toSlug(), toKebabCase(), toCamelCase(), toPascalCase()
@@ -268,8 +269,9 @@ full-framework generation with incremental productivity commands.
 ### Commands
 
 ```
-pw-gen add page <Name>   — Scaffold a Page Object extending BasePage
-pw-gen add test <Name>   — Scaffold a Playwright test file
+pw-gen add page <Name>       — Scaffold a Page Object extending BasePage
+pw-gen add test <Name>       — Scaffold a Playwright test file
+pw-gen add component <Name>  — Scaffold a Component Object extending BaseComponent
 ```
 
 ### Scaffolding Pipeline
@@ -345,10 +347,11 @@ Error: File already exists: src/pages/SupplierPage.ts
 Scaffold templates live in `src/modules/scaffold/templates/` and follow the same
 EJS conventions as full-generation templates:
 
-| Template           | Output path                | Command                  |
-| ------------------ | -------------------------- | ------------------------ |
-| `page.ts.ejs`      | `src/pages/{Name}Page.ts`  | `pw-gen add page <Name>` |
-| `test.spec.ts.ejs` | `src/tests/{slug}.spec.ts` | `pw-gen add test <Name>` |
+| Template           | Output path                         | Command                       |
+| ------------------ | ----------------------------------- | ----------------------------- |
+| `page.ts.ejs`      | `src/pages/{Name}Page.ts`           | `pw-gen add page <Name>`      |
+| `test.spec.ts.ejs` | `src/tests/{slug}.spec.ts`          | `pw-gen add test <Name>`      |
+| `component.ts.ejs` | `src/components/{Name}Component.ts` | `pw-gen add component <Name>` |
 
 ### Future Extension Points
 
@@ -362,6 +365,45 @@ adds one template file and one method to `Scaffolder`:
 | `pw-gen add module <name>`        | n/a                    | Installs an optional module into an existing framework |
 | `pw-gen add business-flow <Name>` | `business-flow.ts.ejs` | Multi-page workflow class                              |
 | `pw-gen add utility <Name>`       | `utility.ts.ejs`       | Typed utility helper                                   |
+
+### Component Scaffolding
+
+`pw-gen add component <Name>` generates a concrete `Component Object` extending
+`BaseComponent` into the existing framework's `src/components/` directory.
+
+```
+pw-gen add component SearchPanel --output ./playwright-fms
+      │
+      │  1. Validate framework exists (playwright.config.ts present)
+      │  2. Normalise name → PascalCase ("SearchPanel")
+      ▼
+buildScaffoldContext("SearchPanel")
+  → { name: "SearchPanel", slug: "search-panel", camelName: "searchPanel", generator: {…} }
+      │
+      │  3. Render component.ts.ejs with ScaffoldContext
+      ▼
+TemplateRenderer.renderSingle("component.ts.ejs", outputPath, context)
+  → StagedFile  { outputPath: "src/components/SearchPanelComponent.ts", content: "…" }
+      │
+      │  4. Overwrite check (throws if file exists and --force not set)
+      │  5. Write to framework root
+      ▼
+FileWriter.write(frameworkDir, [stagedFile])
+  → playwright-fms/src/components/SearchPanelComponent.ts
+```
+
+The generated file:
+
+- extends `BaseComponent` and compiles immediately without modification
+- declares a typed constructor `(root: Locator, testInfo: TestInfo)`
+- includes placeholder `private readonly` locators via `this.find()`
+- provides placeholder business methods with `TODO` markers
+- includes a JSDoc composition example showing how to embed the component
+  into a Page Object
+
+The pipeline is identical to `add page` and `add test` — the same
+`ScaffoldContext`, `TemplateRenderer`, `FileWriter`, and overwrite-protection
+logic are reused without modification.
 
 ---
 
@@ -567,10 +609,11 @@ class InvoiceTableComponent extends BaseComponent {
 
 The generator produces `BaseComponent.ts` only — the abstract infrastructure.
 Concrete component subclasses (`InvoiceTableComponent`, `ConfirmModalComponent`, etc.)
-are application-specific and are never generated.
+are application-specific and are never produced by the full-framework generator.
 
-The future `pw-gen add component <Name>` command (planned for a later sprint) will
-scaffold correctly-structured subclasses with TODO stubs for the team to implement.
+`pw-gen add component <Name>` (Sprint 2B) scaffolds correctly-structured subclasses
+with `TODO` stubs for the team to implement. See the
+[Scaffolding Engine — Component Scaffolding](#component-scaffolding) section above.
 
 See [ADR-012](adr/ADR-012-component-object-model.md) for the full decision rationale.
 

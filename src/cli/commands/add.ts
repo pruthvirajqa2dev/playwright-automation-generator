@@ -5,14 +5,15 @@ import { Scaffolder } from "../../scaffold/Scaffolder";
 import { buildScaffoldContext } from "../../scaffold/ScaffoldContext";
 
 /**
- * Registers the "add" command group: pw-gen add page | test
+ * Registers the "add" command group: pw-gen add page | test | component
  *
  * These commands scaffold individual artefacts into an existing generated
  * framework. They reuse the TemplateRenderer and FileWriter from the engine.
  *
  * Usage:
- *   pw-gen add page <Name>  [--output <dir>] [--force]
- *   pw-gen add test <Name>  [--output <dir>] [--force]
+ *   pw-gen add page <Name>       [--output <dir>] [--force]
+ *   pw-gen add test <Name>       [--output <dir>] [--force]
+ *   pw-gen add component <Name>  [--output <dir>] [--force]
  *
  * Options:
  *   --output <dir>  Framework root directory (defaults to current directory)
@@ -21,6 +22,7 @@ import { buildScaffoldContext } from "../../scaffold/ScaffoldContext";
  * Examples:
  *   pw-gen add page Supplier
  *   pw-gen add test SupplierSearch --output ./Generated/playwright-fms
+ *   pw-gen add component SearchPanel
  *   pw-gen add page InvoiceSearch --force
  */
 export function registerAddCommand(program: Command): void {
@@ -132,6 +134,67 @@ ${separator}`);
     2.  Implement test steps
     3.  Run the test:
           npx playwright test ${outputPath}
+${separator}
+`);
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : String(err);
+          console.error(`\n  Error: ${message}`);
+          process.exit(1);
+        }
+      },
+    );
+
+  // ── pw-gen add component <Name> ───────────────────────────────────────────
+  add
+    .command("component <name>")
+    .description(
+      "Scaffold a new Component Object extending BaseComponent\n" +
+        "  Example: pw-gen add component SearchPanel",
+    )
+    .option(
+      "--output <dir>",
+      "Framework root directory (default: current directory)",
+    )
+    .option("--force", "Overwrite an existing file without confirmation", false)
+    .action(
+      async (rawName: string, options: { output?: string; force: boolean }) => {
+        try {
+          const frameworkDir = resolveFrameworkDir(options.output);
+          assertFrameworkExists(frameworkDir);
+
+          const context = buildScaffoldContext(rawName);
+          const separator = "─".repeat(55);
+
+          console.log(`
+${separator}
+  pw-gen  —  Scaffolding Component Object
+${separator}
+  Name     : ${context.name}Component
+  Output   : ${frameworkDir}
+${separator}`);
+
+          const scaffolder = new Scaffolder();
+          const outputPath = await scaffolder.scaffoldComponent(
+            rawName,
+            frameworkDir,
+            options.force,
+          );
+
+          console.log(`
+  Component generated successfully!
+
+  File     : ${outputPath}
+
+  Next steps:
+    1.  Update locators in ${outputPath}
+    2.  Implement business methods
+    3.  Compose into a Page Object:
+          import { ${context.name}Component } from '../components/${context.name}Component';
+          // inside Page Object class:
+          readonly ${context.camelName} = new ${context.name}Component(
+            this.page.locator('[data-testid="${context.slug}"]'),
+            this.testInfo,
+          );
 ${separator}
 `);
         } catch (err: unknown) {
