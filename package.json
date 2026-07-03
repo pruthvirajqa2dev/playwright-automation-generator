@@ -1,0 +1,24 @@
+{
+  "name": "@pw-gen/cli",
+  "version": "0.1.0",
+  "description": "Enterprise Playwright Automation Platform Generator",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "generate": "ts-node src/cli/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "ejs": "^3.1.10",
+    "fs-extra": "^11.2.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/ejs": "^3.1.5",
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^20.14.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.2"
+  }
+}

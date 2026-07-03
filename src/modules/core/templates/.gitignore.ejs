@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Playwright test outputs
+test-results/
+playwright-report/
+blob-report/
+test-results.json
+
+# Environment config — DO NOT COMMIT (may contain credentials)
+src/config/.env
+src/config/.env.*
+!src/config/.env.example
+
+# Editor artefacts
+.vscode/
+.idea/
+*.swp
+
+# OS artefacts
+.DS_Store
+Thumbs.db
+
+# TypeScript incremental build cache
+*.tsbuildinfo

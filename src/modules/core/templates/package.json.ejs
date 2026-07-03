@@ -1,0 +1,20 @@
+{
+    "name": <%- JSON.stringify(project.slug) %>,
+    "version": "0.1.0",
+    "description": <%- JSON.stringify(project.description) %>,
+    "private": true,
+    "scripts": {
+        "test": "playwright test",
+        <%- environments.names.map(env => JSON.stringify(`test:${env}`) + ': ' + JSON.stringify(`cross-env TEST_ENV=${env} playwright test`)).join(',\n        ') %>,
+        "test:headed": "playwright test --headed",
+        "report": "playwright show-report"
+    },
+    "devDependencies": {
+        "@playwright/test": "^1.60.0",
+        "@types/node": "^20.14.0",
+        "cross-env": "^7.0.3",
+        "dotenv": "^16.4.5",
+        "typescript": "^5.7.2",
+        "winston": "^3.17.0"
+    }
+}
