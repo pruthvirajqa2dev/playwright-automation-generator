@@ -16,6 +16,7 @@
 - [Major Components](#major-components)
 - [Generation Pipeline](#generation-pipeline)
 - [Scaffolding Engine](#scaffolding-engine)
+- [Artifact Registry](#artifact-registry)
 - [Module System](#module-system)
 - [Template Engine](#template-engine)
 - [Template Context](#template-context)
@@ -95,8 +96,14 @@ playwright-automation-generator/     ← the generator (this repo)
 │   │   └── FileWriter.ts            StagedFile[] → filesystem writes
 │   │
 │   ├── scaffold/                    ← scaffolding engine (reuses engine components)
+│   │   ├── ArtifactDefinition.ts    ArtifactDefinition interface — the artefact contract
+│   │   ├── ArtifactRegistry.ts      ArtifactRegistry class + artifactRegistry singleton
 │   │   ├── ScaffoldContext.ts       ScaffoldContext interface + buildScaffoldContext()
-│   │   └── Scaffolder.ts           Orchestrates single-artefact scaffold operations
+│   │   ├── Scaffolder.ts           Orchestrates single-artefact scaffold operations
+│   │   └── artifacts/               Per-artefact definition files
+│   │       ├── page.ts              Page Object artefact
+│   │       ├── test.ts              Test file artefact
+│   │       └── component.ts         Component Object artefact
 │   │
 │   ├── modules/                     ← composable module definitions
 │   │   ├── types.ts                 ModuleManifest and ModuleFileDefinition interfaces
@@ -209,6 +216,13 @@ Maintains the catalogue of available modules. Resolves the ordered set of module
 for a given run: `alwaysIncluded` modules (currently only `core`) are prepended
 automatically. Future optional modules (auth, api, database, …) will be resolved
 here with dependency checking.
+
+### ArtifactRegistry (`src/scaffold/ArtifactRegistry.ts`)
+
+The single source of truth for all scaffoldable artefacts. Maps command names to
+`ArtifactDefinition` objects that describe everything the platform needs to scaffold
+that artefact — template file, output path derivation, naming rules, CLI banner text,
+and next-step guidance. See the [Artifact Registry](#artifact-registry) section.
 
 ### ModuleManifest (`src/modules/types.ts`)
 
@@ -355,8 +369,14 @@ EJS conventions as full-generation templates:
 
 ### Future Extension Points
 
-The scaffold foundation is intentionally minimal. Each future `pw-gen add` command
-adds one template file and one method to `Scaffolder`:
+Adding a new `pw-gen add` command now requires only:
+
+1. A new `ArtifactDefinition` in `src/scaffold/artifacts/{name}.ts`
+2. One `.register()` call in `ArtifactRegistry.ts`
+3. A new EJS template in `src/modules/scaffold/templates/`
+
+No changes to `add.ts`, `Scaffolder.ts`, or any other platform infrastructure
+are required. See the [Artifact Registry](#artifact-registry) section.
 
 | Future command                    | Template               | Notes                                                  |
 | --------------------------------- | ---------------------- | ------------------------------------------------------ |
@@ -404,6 +424,91 @@ The generated file:
 The pipeline is identical to `add page` and `add test` — the same
 `ScaffoldContext`, `TemplateRenderer`, `FileWriter`, and overwrite-protection
 logic are reused without modification.
+
+---
+
+## Artifact Registry
+
+The Artifact Registry is the **single source of truth** for all scaffoldable
+artefacts supported by the platform. Introduced in Sprint 3, it eliminates
+hardcoded artefact knowledge from both the CLI and the Scaffolder.
+
+See [ADR-013](adr/ADR-013-artifact-registry.md) for the full rationale.
+
+### ArtifactDefinition
+
+Each artefact is described by an `ArtifactDefinition` — a self-contained
+descriptor that captures everything the platform needs to scaffold that artefact:
+
+```typescript
+interface ArtifactDefinition {
+  command: string; // "page" | "test" | "component"
+  label: string; // "Page Object" — CLI banner
+  templateFile: string; // "page.ts.ejs"
+  outputPath: (context: ScaffoldContext) => string; // path derivation from name
+  displayName: (context: ScaffoldContext) => string; // "SupplierPage" — banner
+  description: string; // --help text
+  example: string; // "Supplier" — help example
+  successTitle: string; // success headline
+  nextSteps: (context: ScaffoldContext, outputPath: string) => string; // post-generation guidance
+}
+```
+
+### Registration Flow
+
+All built-in artefacts are registered in `src/scaffold/ArtifactRegistry.ts`
+via the pre-populated `artifactRegistry` singleton:
+
+```
+artifactRegistry  (ArtifactRegistry singleton)
+  ├── register(pageArtifact)        ← src/scaffold/artifacts/page.ts
+  ├── register(testArtifact)        ← src/scaffold/artifacts/test.ts
+  └── register(componentArtifact)  ← src/scaffold/artifacts/component.ts
+```
+
+### Resolution Process
+
+```
+pw-gen add page Supplier
+      │
+      │  1. CLI iterates artifactRegistry.all() at startup to register subcommands
+      │     Each subcommand's action closes over its ArtifactDefinition
+      ▼
+ArtifactDefinition  { command: "page", templateFile: "page.ts.ejs", … }
+      │
+      │  2. Action calls Scaffolder.scaffold(definition, "Supplier", frameworkDir, force)
+      ▼
+Scaffolder
+  ├── buildScaffoldContext("Supplier")      → ScaffoldContext
+  ├── definition.outputPath(context)        → "src/pages/SupplierPage.ts"
+  └── writeArtifact(definition.templateFile, outputPath, context, …)
+            ├── TemplateRenderer.renderSingle(…) → StagedFile
+            └── FileWriter.write(frameworkDir, [staged])
+```
+
+### Future Extension
+
+Adding `pw-gen add fixture <Name>` requires **three steps only**:
+
+```typescript
+// 1. src/scaffold/artifacts/fixture.ts
+export const fixtureArtifact: ArtifactDefinition = {
+  command:      "fixture",
+  label:        "Fixture",
+  templateFile: "fixture.ts.ejs",
+  outputPath:   (ctx) => `src/fixtures/${ctx.camelName}Fixture.ts`,
+  displayName:  (ctx) => `${ctx.camelName}Fixture`,
+  // …
+};
+
+// 2. src/scaffold/ArtifactRegistry.ts — add one line:
+.register(fixtureArtifact)
+
+// 3. src/modules/scaffold/templates/fixture.ts.ejs — the EJS template
+```
+
+No changes to `add.ts`, `Scaffolder.ts`, or any other platform infrastructure
+are needed. The CLI picks up the new subcommand automatically at startup.
 
 ---
 
