@@ -94,7 +94,7 @@ export function buildContext(config: GeneratorConfig): TemplateContext {
       aiReadiness: selected.includes("aiReadiness"),
     },
     generator: {
-      version: "0.1.0",
+      version: "0.2.0",
       generatedAt: new Date().toISOString(),
     },
   };

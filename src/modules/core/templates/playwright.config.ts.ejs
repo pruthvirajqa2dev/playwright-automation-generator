@@ -35,9 +35,10 @@ export default defineConfig({
     // Fail the build if test.only is accidentally committed
     forbidOnly: isCI,
 
-    // Retry once on CI — intentional divergence from the Playwright default (retries: 0).
-    // A single retry distinguishes genuine flakiness from transient infrastructure noise
-    // without masking real bugs. See ADR-012 (retries policy).
+    // Intentional divergence from Playwright's recommended CI default (`retries: isCI ? 2 : 0`).
+    // One retry is sufficient for enterprise suites targeting dedicated staging environments —
+    // lower ambient flakiness means two retries would triple execution time on genuine failures
+    // without meaningfully improving stability. See PLAYWRIGHT_ALIGNMENT.md P12.
     retries: isCI ? 1 : 0,
 
     // Single worker in CI (avoids shared-session conflicts); auto-detect locally

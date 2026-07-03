@@ -32,24 +32,24 @@ the engineering conventions that all future releases build on.
 
 ---
 
-## ⬜ v0.2 — Playwright Excellence
+## ✅ v0.2 — Playwright Excellence
 
-_Planned_
+_Released: 2026-07-03_
 
 > Close every known gap between the generated framework and Playwright best practices.
 
 All items from the Phase 2a column in [PLAYWRIGHT_ALIGNMENT.md](PLAYWRIGHT_ALIGNMENT.md).
 
-**Planned:**
+**Delivered:**
 
-- `screenshot: "only-on-failure"` and `video: "retain-on-failure"` — stop recording for passing tests
-- `testIdAttribute` surfaced in config — discoverable customisation point for `getByTestId()`
+- `screenshot: "only-on-failure"` and `video: "retain-on-failure"` — artifacts recorded on failure only
+- `testIdAttribute: "data-testid"` surfaced in config — discoverable customisation point for `getByTestId()`
 - Firefox and WebKit projects added as commented-out config blocks — opt-in multi-browser
 - `fullyParallel` comment updated — explains the safe upgrade path via Auth Module
 - `isVisible()` anti-pattern warning strengthened — explicit JSDoc; must not be used as an assertion
 - ESLint configuration generated alongside the framework — `no-floating-promises` prevents silent assertion failures
 - `expect.soft()` documented in generated README — demonstrated for dashboard/multi-element tests
-- `retries` comment improved — explains the enterprise rationale for `1` vs Playwright's default `2`
+- `retries` comment corrected — references `PLAYWRIGHT_ALIGNMENT.md P12`; removes stale ADR-012 reference
 
 ---
 

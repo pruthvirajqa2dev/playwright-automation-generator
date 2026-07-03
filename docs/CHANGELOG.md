@@ -82,6 +82,65 @@ Three new string utilities required for name derivation:
 
 ---
 
+## [0.2.0] — Playwright Excellence — 2026-07-03
+
+Closes every known gap between the generated framework and Playwright best practices.
+All items from the v0.2 column in [PLAYWRIGHT_ALIGNMENT.md](PLAYWRIGHT_ALIGNMENT.md).
+
+### Templates
+
+**`screenshot` and `video` settings corrected**
+
+`screenshot: "only-on-failure"` and `video: "retain-on-failure"` replace the v0.1
+`"on"` defaults. CI artifact storage is reduced; recordings are retained only when a
+test fails and they are needed for diagnosis.
+
+**`testIdAttribute` surfaced**
+
+`testIdAttribute: "data-testid"` is now explicit in the generated `playwright.config.ts`
+with an explanatory comment. Teams can change the value to match their application's
+existing test-ID attribute (`data-cy`, `data-qa`, etc.) at a glance.
+
+**Cross-browser opt-in blocks**
+
+Firefox and WebKit test projects are included as commented-out blocks in the generated
+`playwright.config.ts`. Teams enable cross-browser coverage with a single line change
+and `npx playwright install`.
+
+**`isVisible()` anti-pattern warning strengthened**
+
+`BasePage.isVisible()` carries an explicit JSDoc warning prohibiting use as an assertion.
+The method itself is retained — it is correct for conditional branching on stable,
+non-transitioning elements. Using it as a proxy for `expect().toBeVisible()` is
+now explicitly flagged.
+
+**ESLint configuration generated**
+
+`eslint.config.mjs` is included in the core module with `@typescript-eslint/no-floating-promises: "error"`.
+A missing `await` before any Playwright call — the most common source of silent false-positive
+test results — is now a compile-time error. `npm run lint` is pre-wired in `package.json`.
+
+**`expect.soft()` documented**
+
+The generated `README.md` demonstrates `expect.soft()` with a dashboard multi-element
+verification example. The guidance explains when to use soft assertions (independent
+elements) and when not to (sequential dependent steps).
+
+**`retries` comment corrected**
+
+The comment explaining `retries: isCI ? 1 : 0` now accurately references Playwright's
+recommended CI default of `isCI ? 2 : 0` and links to `PLAYWRIGHT_ALIGNMENT.md P12`.
+The stale reference to a non-existent ADR-012 has been removed.
+
+### Generator
+
+**Version bumped to 0.2.0**
+
+All version references (`package.json`, CLI `--version`, generated framework header) updated
+to `0.2.0`.
+
+---
+
 ## [0.1.0] — MVP — 2026-07-03
 
 The first complete release. A single `pw-gen new` command produces a fully-structured,
@@ -196,12 +255,12 @@ Every generated framework includes a comprehensive README covering:
 
 ### Known Gaps (Resolved in v0.2)
 
-The following known gaps exist in v0.1 and are approved for resolution in v0.2:
+The following known gaps existed in v0.1 and were resolved in v0.2:
 
-- `screenshot: "on"` and `video: "on"` — records for passing tests (should be failure-only)
-- No ESLint — `no-floating-promises` rule not yet generated
-- `testIdAttribute` not surfaced in generated config
-- `isVisible()` JSDoc does not warn against assertion use
-- Soft assertions (`expect.soft()`) not documented in generated README
+- `screenshot: "on"` and `video: "on"` — recorded for passing tests (resolved: failure-only)
+- No ESLint — `no-floating-promises` rule not yet generated (resolved: generated in core module)
+- `testIdAttribute` not surfaced in generated config (resolved: explicit with comment)
+- `isVisible()` JSDoc does not warn against assertion use (resolved: explicit warning added)
+- Soft assertions (`expect.soft()`) not documented in generated README (resolved: demonstrated)
 
 See [PLAYWRIGHT_ALIGNMENT.md](PLAYWRIGHT_ALIGNMENT.md) for the full gap analysis and resolution schedule.
