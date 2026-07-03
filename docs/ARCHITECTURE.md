@@ -2,6 +2,9 @@
 
 > **pw-gen** is a CLI tool that generates opinionated, enterprise-grade Playwright
 > TypeScript frameworks from a set of composable module templates.
+>
+> For the project vision, goals, and non-goals, see [PROJECT.md](PROJECT.md).
+> For Playwright alignment decisions, see [PLAYWRIGHT_ALIGNMENT.md](PLAYWRIGHT_ALIGNMENT.md).
 
 ---
 
@@ -111,6 +114,37 @@ playwright-automation-generator/     ← the generator (this repo)
 └── Generated/                       ← sample generated output (gitignored)
     └── playwright-fms/              ← example: FMS framework
 ```
+
+---
+
+## Component Dependencies
+
+```
+src/cli/
+  index.ts ──────────► commands/generate.ts
+                              │
+                              │  new GeneratorConfig (Zod-validated)
+                              ▼
+                         Assembler
+                         ┌────────────────────────────────────┐
+                         │  1. ContextBuilder.build(config)   │
+                         │         ▼ TemplateContext          │
+                         │  2. ModuleRegistry.resolve(config) │
+                         │         ▼ ModuleManifest[]         │
+                         │  3. TemplateRenderer.render(       │
+                         │       manifests, context)          │
+                         │         ▼ StagedFile[]             │
+                         │  4. FileWriter.write(              │
+                         │       stagedFiles, outputDir)      │
+                         └────────────────────────────────────┘
+                                       │
+                                       ▼
+                              Output directory
+                             (generated framework)
+```
+
+Each component is stateless. Components receive inputs and return outputs — they
+do not call each other. Only `Assembler` knows the pipeline order.
 
 ---
 

@@ -1,169 +1,224 @@
 # Roadmap — Playwright Automation Generator
 
-Progress tracker for pw-gen milestones. Checked items are complete and in `main`.
+Product releases from MVP through the enterprise automation platform vision.
+
+> **Status key:** ✅ Released · ⬜ Planned
 
 ---
 
-## ✅ Milestone 0 — Vertical Slice (Complete)
+## ✅ v0.1 — MVP
 
-> **Goal:** Prove the generation pipeline end-to-end.
-> One command → one generated framework → one passing Playwright test.
+_Released: 2026-07-03_
 
-- [x] CLI entry point (`pw-gen new`) with Commander.js
-- [x] Zod schema validation for all user input
-- [x] `ContextBuilder` — config → typed `TemplateContext`
-- [x] `TemplateRenderer` — EJS rendering to in-memory `StagedFile[]`
-- [x] `FileWriter` — atomic write of staged files to output directory
-- [x] `ModuleRegistry` — module resolution with `alwaysIncluded` support
-- [x] `core` module manifest — 13 generated files
-- [x] Generated framework: compiles with `tsc --noEmit`, zero errors
-- [x] Generated framework: Playwright smoke test passes against `playwright.dev`
-- [x] Flag-based input (`--name`, `--org`, `--app`, `--envs`, `--output`)
-- [x] JSON config file input (`--config pw-gen.config.json`)
+> One command produces a complete, immediately runnable enterprise Playwright framework.
 
----
+The foundation release. Proves the generation pipeline end-to-end and establishes
+the engineering conventions that all future releases build on.
 
-## ✅ Milestone 1 — Enterprise Core Foundation (Complete)
+**Delivered:**
 
-> **Goal:** Replace all sample/placeholder artifacts with production-quality
-> equivalents. Every file the generator produces should be something a real
-> automation engineer would use on their first day.
-
-- [x] **BasePage** — extended with full enterprise helper set:
-  - [x] `waitForElement()` — waits for element visibility
-  - [x] `waitForLoadingIndicator()` — waits for spinner/overlay to disappear
-  - [x] `waitForNetworkIdle()` — waits for network idle state
-  - [x] `isVisible()` — non-throwing boolean visibility check
-  - [x] `expectHidden()` — assertion for hidden/detached elements
-  - [x] `expectToast()` — toast/notification message verification
-  - [x] `scrollIntoView()` — scroll element into viewport
-
-- [x] **LoginPage** — production-quality authentication Page Object:
-  - [x] Replaces `SamplePage`
-  - [x] Private readonly locators with adaptation comments
-  - [x] `login(username, password)` — form submission
-  - [x] `loginWithEnvCredentials()` — ENV-driven authentication
-  - [x] `expectOnLoginPage()` — login page load assertion
-  - [x] `expectLoginSuccess()` — post-login state assertion (implementation required)
-  - [x] `expectLoginError()` — error message assertion
-
-- [x] **Fixture architecture** — typed, extensible fixture set:
-  - [x] `loginPage` fixture — pre-instantiated `LoginPage`
-  - [x] `_testLifecycle` auto-fixture — logs start/pass/fail for every test
-  - [x] `AppFixtures` type exported for downstream extension
-
-- [x] **Login smoke test** — replaces `sample.spec.ts`:
-  - [x] Passes out of the box against `playwright.dev`
-  - [x] Demonstrates `test.step()`, logger, annotations, screenshot, ENV
-  - [x] Commented template for full login flow (ready to uncomment)
-  - [x] Tagged `@smoke`
-
-- [x] **Structured logger** — improved logger format:
-  - [x] Padded level field for log alignment
-  - [x] Colorized locally, plain text in CI
-
-- [x] **Enterprise README template** — self-documenting generated framework:
-  - [x] Complete folder structure
-  - [x] Page Object conventions table
-  - [x] Test conventions and imports guide
-  - [x] Fixture usage documentation
-  - [x] Logging levels reference
-  - [x] Environment configuration guide
-  - [x] CI integration reference
-
-- [x] **Build script** — templates automatically copied to `dist/` after `tsc`
+- `pw-gen new` CLI command — flag-based and JSON config file input
+- Zod validation at the CLI boundary — invalid config rejected before any file writes
+- Five-stage generation pipeline: validate → context → render → stage → write
+- Two-phase atomicity: all templates render in memory before any disk writes begin
+- Module system foundation: `ModuleRegistry` and `ModuleManifest` interface
+- `core` module: 13 generated files — complete, standalone Playwright TypeScript project
+- Enterprise `BasePage` — navigation, wait, assertion, screenshot, and scroll helpers
+- `LoginPage` template — environment-driven credentials, business-oriented methods
+- Typed fixture architecture — `loginPage` fixture + `_testLifecycle` auto-logger
+- Login smoke test — passes out of the box; demonstrates full framework stack
+- Structured Winston logger — colorized locally, plain text in CI
+- Self-documenting generated `README.md`
 
 ---
 
-## ⬜ Milestone 2 — Authentication Module
+## ⬜ v0.2 — Playwright Excellence
 
-> **Goal:** Deliver a reusable, secure authentication utility that generated
-> frameworks can optionally include.
+_Planned_
 
-- [ ] `auth` module manifest and templates
-- [ ] AES-256 encrypted credential store (replaces plaintext `.env` credentials)
-- [ ] Session storage — save authenticated browser state to disk
-- [ ] Authenticated page fixture — reuses saved session, skips login UI per test
-- [ ] Session expiry detection and automatic re-authentication
-- [ ] Multi-user support (admin, standard, read-only personas)
-- [ ] Integration with generated `LoginPage`
+> Close every known gap between the generated framework and Playwright best practices.
 
----
+All items from the Phase 2a column in [PLAYWRIGHT_ALIGNMENT.md](PLAYWRIGHT_ALIGNMENT.md).
 
-## ⬜ Milestone 3 — API Module
+**Planned:**
 
-> **Goal:** Generate an API testing layer alongside the UI framework so
-> teams can write API tests and use the API for test data setup.
-
-- [ ] `api` module manifest and templates
-- [ ] `ApiClient` base class — Playwright `APIRequestContext` wrapper
-- [ ] Typed response helpers — `expectStatus()`, `expectBodyContains()`
-- [ ] Authentication header injection (Bearer token, API key)
-- [ ] API fixture — `apiContext` in the extended test object
-- [ ] Example API smoke test template
+- `screenshot: "only-on-failure"` and `video: "retain-on-failure"` — stop recording for passing tests
+- `testIdAttribute` surfaced in config — discoverable customisation point for `getByTestId()`
+- Firefox and WebKit projects added as commented-out config blocks — opt-in multi-browser
+- `fullyParallel` comment updated — explains the safe upgrade path via Auth Module
+- `isVisible()` anti-pattern warning strengthened — explicit JSDoc; must not be used as an assertion
+- ESLint configuration generated alongside the framework — `no-floating-promises` prevents silent assertion failures
+- `expect.soft()` documented in generated README — demonstrated for dashboard/multi-element tests
+- `retries` comment improved — explains the enterprise rationale for `1` vs Playwright's default `2`
 
 ---
 
-## ⬜ Milestone 4 — Reporting & Observability
+## ⬜ v0.3 — Enterprise Core
 
-> **Goal:** Produce richer test results that are useful in CI dashboards
-> and sprint reviews.
+_Planned_
 
-- [ ] Custom HTML report theme (organisation branding via config)
-- [ ] Test result trend tracking (JSON history)
-- [ ] Failure screenshot comparison (current vs baseline)
-- [ ] Accessibility scan integration (axe-core) — optional flag
+> Expand the core module to cover the full enterprise testing foundation.
 
----
+**Planned:**
 
-## ⬜ Milestone 5 — Azure DevOps Module
-
-> **Goal:** Generate the Azure DevOps pipeline configuration alongside
-> the test framework.
-
-- [ ] `azure-devops` module manifest and templates
-- [ ] Multi-stage `azure-pipelines.yml` (install → test → publish)
-- [ ] Variable group documentation template
-- [ ] Artifact publishing steps (HTML report, test-results.json)
-- [ ] PR validation gate configuration
-- [ ] Optional sharding configuration
+- Multi-environment `playwright.config.ts` with named project variants (uat, staging, prod)
+- `BasePage` extension: modal and overlay Page Object base class
+- Environment variable validation on startup — fail fast on missing required variables
+- Comprehensive `.env.example` with all variables documented and explained
+- `pw-gen.config.json` generated alongside the framework — records generation parameters for future upgrade
+- Accessibility smoke test template (axe-core integration, opt-in)
 
 ---
 
-## ⬜ Milestone 6 — Database & Data Module
+## ⬜ v0.4 — Authentication Module
 
-> **Goal:** Give generated frameworks a structured way to manage test data
-> via direct database access or API seeding.
+_Planned_
 
-- [ ] `database` module manifest
-- [ ] Typed database client wrapper (configurable: MSSQL, PostgreSQL)
-- [ ] Test data factory pattern
-- [ ] Automatic test data teardown via fixtures
-- [ ] Data seeding smoke test template
+> Deliver the `auth` module: session-based authentication using `storageState`.
 
----
+The correct long-term authentication pattern, deferred from MVP to be implemented properly.
+See [ADR-007](adr/ADR-007-authentication-storagstate-deferred.md) for the deferral rationale.
 
-## ⬜ Milestone 7 — Framework Upgrade Engine
+**Planned:**
 
-> **Goal:** Allow existing generated projects to adopt template improvements
-> without full regeneration.
-
-- [ ] `pw-gen upgrade` command
-- [ ] Diff view: current generated files vs latest template output
-- [ ] Selective file adoption (upgrade specific files only)
-- [ ] Upgrade history tracking (generated-at metadata per file)
-- [ ] Conflict detection for files modified after generation
+- `auth` module manifest and templates
+- `tests/auth.setup.ts` — dedicated setup test that authenticates once per worker
+- `setup` project in `playwright.config.ts` with `dependencies: ['setup']` on test projects
+- `playwright/.auth/user.json` — persisted browser state (gitignored)
+- `mergeTests()` fixture composition — replaces `base.extend()` when combining core and auth fixtures
+- Worker-scoped authenticated session fixture — tests share session, skipping UI login
+- Multi-user persona support — admin, standard, read-only credential sets
+- Session expiry detection and automatic re-authentication
+- Upgrade path for v0.1/v0.2/v0.3 frameworks to adopt the auth module
 
 ---
 
-## ⬜ Milestone 8 — AI Test Author
+## ⬜ v0.5 — Scaffolding Commands
 
-> **Goal:** Use LLM capabilities to generate Page Objects and test cases
-> from natural language descriptions or application screenshots.
+_Planned_
 
-> Prerequisites: Milestone 1 complete, framework conventions locked and documented.
+> Add `pw-gen add` commands to scaffold individual artifacts into existing generated projects.
 
-- [ ] Natural language → `test.step()` skeleton generation
-- [ ] Screenshot → Page Object locator suggestion
-- [ ] Test coverage gap analysis (pages with no tests)
-- [ ] Generated test quality review (hallucination detection)
+**Planned:**
+
+- `pw-gen add page <name>` — scaffold a new Page Object extending `BasePage`
+- `pw-gen add test <name>` — scaffold a new test file with standard imports and structure
+- `pw-gen add fixture <name>` — scaffold a new typed fixture with `AppFixtures` extension
+- `pw-gen add module <module-name>` — add an optional module to an existing generated project
+
+---
+
+## ⬜ v0.6 — Module Ecosystem
+
+_Planned_
+
+> Optional modules for API testing, database access, and custom reporting.
+
+**Planned:**
+
+- **`api` module:** `ApiClient` base class (Playwright `APIRequestContext` wrapper), typed response
+  helpers, API fixture in the extended test object, API smoke test template
+- **`database` module:** typed database client (configurable: MSSQL / PostgreSQL), test data
+  factory pattern, auto-teardown fixture, data seeding smoke test
+- **`reporting` module:** custom HTML report theme with organisation branding, test result
+  trend tracking (JSON history), failure screenshot baseline comparison
+
+---
+
+## ⬜ v0.7 — Framework Intelligence
+
+_Planned_
+
+> Give the generator awareness of existing generated projects for upgrade and analysis.
+
+**Planned:**
+
+- `pw-gen upgrade` — diff current project files against current template output
+- Selective file adoption — upgrade specific files without full regeneration
+- Upgrade history tracking via per-file `generated-at` metadata
+- Conflict detection for files modified after initial generation
+- `pw-gen validate` — verify a generated project conforms to current framework conventions
+
+---
+
+## ⬜ v0.8 — Platform UI
+
+_Planned_
+
+> Web-based interface for teams that prefer GUI project creation.
+
+**Planned:**
+
+- Local web UI for `pw-gen new` — form-based project configuration
+- Live preview of the directory structure that will be generated
+- Module dependency visualisation — show which modules are required by selected modules
+- Configuration export as `pw-gen.config.json`
+
+---
+
+## ⬜ v0.9 — Pipeline Providers
+
+_Planned_
+
+> Generate CI/CD pipeline configuration alongside the test framework.
+
+**Planned:**
+
+- **`azure-devops` provider:** multi-stage `azure-pipelines.yml`, variable group documentation
+  template, artifact publishing (HTML report + `test-results.json`), PR validation gate
+- **`github-actions` provider:** workflow YAML with matrix strategy, artifact publishing
+- Pipeline provider selectable at generation time: `--pipeline azure-devops`
+- Shard configuration for parallelised CI runs
+
+---
+
+## ⬜ v1.0 — Enterprise Automation Platform
+
+_Planned_
+
+> Production-ready platform. All core modules and providers stable. Complete documentation.
+
+**Criteria for v1.0:**
+
+- `core`, `auth`, `api`, and `database` modules all stable and documented
+- At least one pipeline provider shipped and in active use
+- `pw-gen upgrade` operational and tested against real generated projects
+- All Playwright alignment items resolved — each gap is adopted, formally deferred, or documented as intentional divergence
+- Generator codebase test coverage ≥ 90%
+- Public documentation site live
+
+---
+
+## ⬜ v2.0 — AI Test Author
+
+_Planned_
+
+> AI-assisted test authoring built on the stable v1.0 platform.
+
+> **Prerequisite:** v1.0 complete, framework conventions locked, templates stable, and documentation comprehensive.
+
+AI augmentation requires a stable, well-documented foundation that an LLM can reason
+about accurately. Premature AI features on an evolving framework produce inconsistent output.
+
+**Planned:**
+
+- Natural language → `test.step()` skeleton generation
+- Screenshot → Page Object locator suggestion
+- Test coverage gap analysis — identify pages and flows with no test coverage
+- Generated test quality review — hallucination detection and correction suggestions
+- Playwright trace → reproduction test (failed trace → runnable regression test)
+
+---
+
+## Deferred Items
+
+Items not on the active roadmap, with documented rationale.
+
+| Item                                  | Deferred To | Rationale                                                                        |
+| ------------------------------------- | ----------- | -------------------------------------------------------------------------------- |
+| `storageState` authentication pattern | v0.4        | Requires Auth Module; partial implementation produces non-runnable scaffolding   |
+| `mergeTests()` fixture composition    | v0.4        | Correct only when multiple modules contribute fixtures; premature with core-only |
+| ESLint in generated framework         | v0.2        | Gap-analysis approved; deferred from MVP to maintain tight initial scope         |
+| Azure DevOps pipeline generation      | v0.9        | Depends on stable framework script names, artifact paths, and env conventions    |
+| `pw-gen upgrade` command              | v0.7        | Pipeline must be mature; upgrade design requires stable template conventions     |
+| AI test authoring                     | v2.0        | Requires stable conventions and comprehensive docs before AI output is reliable  |

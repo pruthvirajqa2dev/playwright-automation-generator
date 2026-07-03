@@ -74,7 +74,7 @@ of pw-gen. For full context and rationale, refer to the corresponding ADR.
 
 ---
 
-## 2026-07-03 — Phase 1: Enterprise Core Foundation
+## 2026-07-03 — v0.1.0: Enterprise Core Foundation (Phase 1)
 
 - **`SamplePage` replaced with `LoginPage`.** The placeholder `SamplePage` that
   targeted `https://playwright.dev` was replaced with a production-quality
@@ -110,3 +110,32 @@ of pw-gen. For full context and rationale, refer to the corresponding ADR.
 - **`npm run build` copies templates automatically.** The build script was
   updated to copy EJS templates from `src/` to `dist/` after `tsc`. Previously,
   this was a manual step that broke generation after a clean build.
+
+---
+
+## 2026-07-03 — Product Maturity Sprint (Documentation Baseline)
+
+- **`docs/PROJECT.md` created.** Establishes the project charter: vision, problem
+  statement, goals, non-goals, product philosophy, current status, and future vision.
+  This document is the starting point for any conversation about what pw-gen is and
+  what it is not.
+
+- **Roadmap restructured as versioned product releases.** The milestone-based roadmap
+  was converted to a version-based format (v0.1–v2.0), making release scope and
+  dependencies explicit.
+
+- **`PLAYWRIGHT_ALIGNMENT.md` restructured into three categories.** The gap analysis
+  format (G1–G12) was replaced with a three-category structure: Fully Adopted,
+  Intentionally Different, and Deferred. Each category explains the engineering
+  reasoning, not just the decision.
+
+- **`CHANGELOG.md` consolidated.** The two separate [0.1.0] entries were merged into
+  a single, product-focused release entry documenting capabilities delivered rather
+  than implementation steps.
+
+- **Five strategic ADRs created.** High-level ADRs covering template engine strategy,
+  code ownership model, generator pipeline architecture, Playwright-first commitment,
+  and MVP scope decisions. These complement the existing eleven specific ADRs.
+
+- **Repository is now self-describing.** Future implementation sprints can begin from
+  the documentation without requiring conversational context from previous sessions.
