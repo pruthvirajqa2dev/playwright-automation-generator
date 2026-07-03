@@ -20,6 +20,28 @@ export abstract class BasePage {
     protected readonly page: Page;
     protected readonly testInfo: TestInfo;
 
+    /**
+     * Constructs a new Page Object bound to the active test lifecycle.
+     *
+     * @param page     - Playwright Page from the test fixture.
+     * @param testInfo - TestInfo from the test function or fixture callback.
+     *                   Enables {@link takeScreenshot} to attach evidence
+     *                   screenshots to the HTML report at any workflow boundary.
+     *
+     * ── Why TestInfo is an explicit parameter, not test.info() ───────────────
+     * Playwright exposes `test.info()` as a global accessor, but Page Objects
+     * must not rely on global state. Explicit constructor injection:
+     *   • Makes the dependency visible in the class contract
+     *   • Allows the class to be instantiated outside the test runner (mocked)
+     *   • Correctly scopes each instance to its own test in parallel execution
+     *     (each worker gets its own TestInfo — no shared state)
+     *
+     * How to supply testInfo:
+     *   In a fixture:      async ({ page }, use, testInfo) => { new LoginPage(page, testInfo) }
+     *   In a test:         test("...", async ({ page }, testInfo) => { new DashboardPage(page, testInfo) })
+     *
+     * See ADR-009 for the full architectural rationale.
+     */
     constructor(page: Page, testInfo: TestInfo) {
         this.page = page;
         this.testInfo = testInfo;

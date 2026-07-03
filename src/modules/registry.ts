@@ -1,5 +1,6 @@
 import type { ModuleManifest } from "./types";
 import { manifest as coreManifest } from "./core/manifest";
+import { manifest as authManifest } from "./auth/manifest";
 
 /**
  * ModuleRegistry — central store for all available generator modules.
@@ -14,6 +15,7 @@ export class ModuleRegistry {
 
   constructor() {
     this.register(coreManifest);
+    this.register(authManifest);
   }
 
   private register(manifest: ModuleManifest): void {

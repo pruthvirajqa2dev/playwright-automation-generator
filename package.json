@@ -4,7 +4,7 @@
   "description": "Enterprise Playwright Automation Platform Generator",
   "private": true,
   "scripts": {
-    "build": "tsc && node -e \"require('fs-extra').copySync('src/modules/core/templates', 'dist/modules/core/templates')\"",
+    "build": "tsc && node -e \"const fse = require('fs-extra'); ['core', 'auth'].forEach(m => fse.copySync('src/modules/' + m + '/templates', 'dist/modules/' + m + '/templates'))\"",
     "generate": "ts-node src/cli/index.ts",
     "typecheck": "tsc --noEmit"
   },

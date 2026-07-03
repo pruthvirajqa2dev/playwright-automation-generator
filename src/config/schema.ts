@@ -38,6 +38,13 @@ export const GeneratorConfigSchema = z.object({
       default: z.string().default("uat"),
     })
     .default({}),
+
+  modules: z
+    .object({
+      /** Optional module names to include, e.g. ["auth"] */
+      selected: z.array(z.string()).default([]),
+    })
+    .default({}),
 });
 
 export type GeneratorConfig = z.infer<typeof GeneratorConfigSchema>;

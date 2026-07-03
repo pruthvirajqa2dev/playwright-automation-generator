@@ -25,7 +25,7 @@ export class Assembler {
 
     console.log("  Resolving modules...");
     // Pass [] — the registry prepends all alwaysIncluded modules (i.e. core)
-    const modules = this.registry.resolve([]);
+    const modules = this.registry.resolve(config.modules.selected);
     const moduleNames = modules.map((m) => m.name).join(", ");
     console.log(`  Modules: ${moduleNames}`);
 

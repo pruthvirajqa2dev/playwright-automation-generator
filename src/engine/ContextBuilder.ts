@@ -33,9 +33,9 @@ export interface TemplateContext {
     default: string;
     count: number;
   };
-  /** Boolean flags indicating which optional modules were selected.
-   *  All false for the core-only vertical slice. */
+  /** Boolean flags indicating which optional modules were selected. */
   modules: {
+    auth: boolean;
     email: boolean;
     pdf: boolean;
     excel: boolean;
@@ -58,6 +58,7 @@ export interface TemplateContext {
  */
 export function buildContext(config: GeneratorConfig): TemplateContext {
   const appSlug = toSlug(config.project.applicationName);
+  const selected = config.modules.selected;
 
   return {
     project: {
@@ -83,13 +84,14 @@ export function buildContext(config: GeneratorConfig): TemplateContext {
       count: config.environments.names.length,
     },
     modules: {
-      email: false,
-      pdf: false,
-      excel: false,
-      database: false,
-      networkCapture: false,
-      accessibility: false,
-      aiReadiness: false,
+      auth: selected.includes("auth"),
+      email: selected.includes("email"),
+      pdf: selected.includes("pdf"),
+      excel: selected.includes("excel"),
+      database: selected.includes("database"),
+      networkCapture: selected.includes("networkCapture"),
+      accessibility: selected.includes("accessibility"),
+      aiReadiness: selected.includes("aiReadiness"),
     },
     generator: {
       version: "0.1.0",

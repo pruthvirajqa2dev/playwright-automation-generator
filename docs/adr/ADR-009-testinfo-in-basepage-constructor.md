@@ -134,6 +134,38 @@ screenshot attachment, and clear testability.
 
 ---
 
+## Pattern in Practice
+
+The fixture in `src/fixtures/test.ts` shows the correct threading pattern.
+`testInfo` enters via the fixture callback's third parameter and is forwarded
+to the Page Object constructor:
+
+```typescript
+loginPage: async ({ page }, use, testInfo) => {
+    await use(new LoginPage(page, testInfo));
+},
+```
+
+In test files, `testInfo` is the second argument to the test function and can be
+used to instantiate additional Page Objects inline:
+
+```typescript
+test("Invoice flow @smoke", async ({ page, loginPage }, testInfo) => {
+  await loginPage.loginWithEnvCredentials();
+
+  const invoicePage = new InvoicePage(page, testInfo); // testInfo in scope
+  await invoicePage.createDraftInvoice();
+  await invoicePage.takeScreenshot("draft-created"); // attached to report
+});
+```
+
+In parallel execution (when `fullyParallel: true` is enabled with the Auth Module),
+each worker runs its own test with its own `TestInfo` instance. Because `testInfo`
+is injected explicitly, each Page Object instance is bound to the correct test's
+lifecycle — there is no shared global state between workers.
+
+---
+
 ## Reasoning
 
 1. **Evidence attachment at workflow boundaries.** Enterprise automation often

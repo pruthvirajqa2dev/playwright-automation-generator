@@ -37,6 +37,10 @@ export function registerGenerateCommand(program: Command): void {
       "--config <file>",
       "Path to pw-gen.config.json (overrides all flags)",
     )
+    .option(
+      "--modules <modules>",
+      'Comma-separated optional modules, e.g. "auth"',
+    )
     .action(async (options: Record<string, string>) => {
       try {
         let rawConfig: Record<string, unknown>;
@@ -74,6 +78,14 @@ export function registerGenerateCommand(program: Command): void {
               names: envNames,
               default: options["defaultEnv"] ?? envNames[0] ?? "uat",
             },
+            modules: {
+              selected: options["modules"]
+                ? options["modules"]
+                    .split(",")
+                    .map((m) => m.trim())
+                    .filter(Boolean)
+                : [],
+            },
           };
         }
 
@@ -105,6 +117,7 @@ ${separator}
   Application  : ${config.project.applicationName}
   Type         : ${config.automation.type}
   Environments : ${config.environments.names.join(", ")}
+  Modules      : core${config.modules.selected.length ? `, ${config.modules.selected.join(", ")}` : ""}
   Output       : ${outputDir}
 ${separator}`);
 

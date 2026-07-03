@@ -75,6 +75,16 @@ export default defineConfig({
     },
 
     projects: [
+<% if (modules.auth) { -%>
+        // ── Authentication setup ──────────────────────────────────────────────
+        // Runs once before test projects — authenticates via UI and persists
+        // browser state to playwright/.auth/user.json. See ADR-007.
+        {
+            name: "setup",
+            testMatch: "src/tests/auth/auth.setup.ts",
+        },
+
+<% } -%>
         // ── Primary browser ────────────────────────────────────────────────────
         // Chromium is the default — enterprise internal apps typically support a
         // single browser. See ADR-010 for the cross-browser policy decision.
@@ -83,7 +93,14 @@ export default defineConfig({
             use: {
                 ...devices["Desktop Chrome"],
                 viewport: { width: 1280, height: 720 },
+<% if (modules.auth) { -%>
+                // Reuse authenticated browser state — avoids UI login per test
+                storageState: "playwright/.auth/user.json",
+<% } -%>
             },
+<% if (modules.auth) { -%>
+            dependencies: ["setup"],
+<% } -%>
         },
 
         // ── Optional: cross-browser coverage ───────────────────────────────────

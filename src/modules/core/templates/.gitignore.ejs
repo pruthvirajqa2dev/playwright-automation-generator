@@ -26,3 +26,8 @@ Thumbs.db
 
 # TypeScript incremental build cache
 *.tsbuildinfo
+<% if (modules.auth) { -%>
+
+# Playwright authentication state — contains session tokens, do not commit
+playwright/.auth/*.json
+<% } -%>
