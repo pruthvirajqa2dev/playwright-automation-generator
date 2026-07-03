@@ -59,6 +59,7 @@ LOG_LEVEL=info
 <%- environments.names.map(env => `| \`npm run test:${env}\` | Run against the \`${env}\` environment |`).join('\n') %>
 | `npm run test:headed` | Run with browser visible |
 | `npm run report` | Open the HTML test report |
+| `npm run lint` | Lint TypeScript sources — catches missing `await` |
 
 ---
 
@@ -184,6 +185,30 @@ test.describe("Dashboard", () => {
 | Wrap steps in `test.step()` | Produces readable HTML report output |
 | Add annotations | `test.info().annotations.push(...)` |
 | Screenshots on key steps | `await page.takeScreenshot("step-name")` |
+
+### Soft assertions
+
+Use `expect.soft()` when a test must verify multiple **independent** elements and
+you want all failures reported in one run, rather than stopping at the first one.
+
+```typescript
+test("Dashboard elements are present @smoke", async ({ page, loginPage }, testInfo) => {
+    await loginPage.loginWithEnvCredentials();
+    const dashboard = new DashboardPage(page, testInfo);
+
+    // Each soft assertion is recorded but does NOT stop the test
+    await expect.soft(dashboard.welcomeHeading).toBeVisible();
+    await expect.soft(dashboard.statsPanel).toBeVisible();
+    await expect.soft(dashboard.navMenu).toBeVisible();
+
+    // Hard-fail at the end if any soft assertion failed — produces one aggregate report
+    expect(test.info().errors).toHaveLength(0);
+});
+```
+
+> **When to use** `expect.soft()` suits multi-element page verification:
+> dashboards, form fields, navigation links. Do **not** use it when a failed
+> assertion would make subsequent steps meaningless (e.g. a login check).
 
 ---
 

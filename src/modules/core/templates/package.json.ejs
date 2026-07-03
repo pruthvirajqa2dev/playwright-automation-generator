@@ -7,14 +7,17 @@
         "test": "playwright test",
         <%- environments.names.map(env => JSON.stringify(`test:${env}`) + ': ' + JSON.stringify(`cross-env TEST_ENV=${env} playwright test`)).join(',\n        ') %>,
         "test:headed": "playwright test --headed",
-        "report": "playwright show-report"
+        "report": "playwright show-report",
+        "lint": "eslint src"
     },
     "devDependencies": {
         "@playwright/test": "^1.60.0",
         "@types/node": "^20.14.0",
         "cross-env": "^7.0.3",
         "dotenv": "^16.4.5",
+        "eslint": "^9.0.0",
         "typescript": "^5.7.2",
+        "typescript-eslint": "^8.0.0",
         "winston": "^3.17.0"
     }
 }

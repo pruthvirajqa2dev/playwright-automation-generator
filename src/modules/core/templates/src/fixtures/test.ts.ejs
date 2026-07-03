@@ -52,3 +52,16 @@ export const test = base.extend<AppFixtures>({
 
 export { expect } from "@playwright/test";
 export type { Page, Locator, TestInfo, BrowserContext } from "@playwright/test";
+
+// ── Future: fixture composition with mergeTests() ────────────────────────────
+// When a second module contributes its own fixture set (e.g. the Auth Module,
+// Milestone 2), combine the two sets using mergeTests() — do NOT nest .extend()
+// calls, as mergeTests() correctly handles type merging and fixture scoping.
+//
+//   import { mergeTests }         from "@playwright/test";
+//   import { test as coreTest }  from "@pw-gen/core/fixtures";    // this file
+//   import { test as authTest }  from "@pw-gen/auth/fixtures";    // Auth Module
+//
+//   export const test = mergeTests(coreTest, authTest);
+//
+// See: https://playwright.dev/docs/api/class-test#test-merge-tests

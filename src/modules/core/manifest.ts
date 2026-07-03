@@ -29,6 +29,7 @@ export const manifest: ModuleManifest = {
     { templatePath: "package.json.ejs", outputPath: "package.json" },
     { templatePath: ".gitignore.ejs", outputPath: ".gitignore" },
     { templatePath: ".prettierrc.json.ejs", outputPath: ".prettierrc.json" },
+    { templatePath: "eslint.config.mjs.ejs", outputPath: "eslint.config.mjs" },
     { templatePath: ".env.example.ejs", outputPath: ".env.example" },
     { templatePath: "README.md.ejs", outputPath: "README.md" },
 
@@ -63,13 +64,16 @@ export const manifest: ModuleManifest = {
       "@types/node": "^20.14.0",
       "cross-env": "^7.0.3",
       dotenv: "^16.4.5",
+      eslint: "^9.0.0",
       typescript: "^5.7.2",
+      "typescript-eslint": "^8.0.0",
       winston: "^3.17.0",
     },
   },
 
   npmScripts: {
     test: "playwright test",
+    lint: "eslint src",
     report: "playwright show-report",
   },
 };
